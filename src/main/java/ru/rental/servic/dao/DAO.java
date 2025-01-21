@@ -5,6 +5,8 @@ import java.util.function.Predicate;
 
 public interface DAO<T, I> {
 
+    void createTable();
+
     T get(I id);
 
     T update(I id, T obj);

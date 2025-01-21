@@ -2,7 +2,6 @@ package ru.rental.servic.service;
 
 import ru.rental.servic.dao.UserDao;
 import ru.rental.servic.dto.UserDto;
-import ru.rental.servic.model.Car;
 import ru.rental.servic.model.User;
 
 import java.util.List;
@@ -15,10 +14,11 @@ public class UserService implements Service<UserDto, String> {
 
     /**
      * метод который позволяет осуществлять поиск нужного объекта по его id тут это его кличка,
+     *
      * @param id, метод защищен от налл путем обертки класса опшинл, запрос на состав полей объекта идет в класс дто,
      *            создает не изменяемый объект для прохода по массиву, для поиска нужного по его id, если созданный объект
      *            налл то выкидывает исключение, чтобы не упасть, иначе через метод конверт преобразовываем его в дто(что
-     *           бы можно было безопасно использовать, без прямого взаимодействия с дао) и
+     *            бы можно было безопасно использовать, без прямого взаимодействия с дао) и
      *            возвращаем объект
      * @return
      */
@@ -38,6 +38,7 @@ public class UserService implements Service<UserDto, String> {
      * создаем объект на основе полей из дто и присваиваем значения из дао по id объекта, если предан пустой объект
      * выкинет исключение, иначе пройдем по массиву объектов с помощью библиотеки билдер, присвом им значение переданного
      * объекта, далее присвает объекту по id поля из билдера и возращает путем конвертации в дто новый объект
+     *
      * @param id
      * @param obj
      * @return
@@ -66,6 +67,7 @@ public class UserService implements Service<UserDto, String> {
     /**
      * метод который создает новый объект на основе переданого ему значения, проходит по массиву присваивает значения полям
      * на основе переданных производит добавления в массив и путем конвертации для дто
+     *
      * @param obj
      * @return
      */
@@ -87,6 +89,7 @@ public class UserService implements Service<UserDto, String> {
     /**
      * метод который удаляет объект по id, проходим по массиву с помощью метода гет, если объекта нет(id) ничего не вернет,
      * иначе удалит объект по id
+     *
      * @param id
      * @return
      */
@@ -105,29 +108,29 @@ public class UserService implements Service<UserDto, String> {
     /**
      * метод который фильтрует массив по переданому предикату, и возращает из дао все объекты пропущенные через фильтр,
      * стримом, уонвертированные в дто и сохраненые в новый лист
+     *
      * @param predicate
      * @return
      */
     @Override
     public List<UserDto> filterBy(Predicate<UserDto> predicate) {
 
-        return userDao.getAll().stream()
-                .map(user -> this.convertByDto(user))
-                .filter(predicate)
-                .toList();
+        return null;
     }
 
     /**
      * метод который передает весь список объектов, перевормотированные из дао в дто сохраненные в новом листе
+     *
      * @return
      */
     @Override
     public List<UserDto> getAll() {
-        return userDao.getAll().stream().map(user -> convertByDto(user)).toList();
+        return null;
     }
 
     /**
      * метод который производит конвертацию объектов на основе указанных полей, в классе мы производим конвертацию из дао в дто
+     *
      * @param
      * @return
      */
