@@ -58,7 +58,7 @@ class UserDaoTest {
         bd.forEach(System.out::println);
         assertNotNull(bd);
 
-  //      userDao.deleteAllUsers();
+        //      userDao.deleteAllUsers();
         List<User> bd2 = userDao.getAllUsers();
         assertFalse(bd2.isEmpty());
 
@@ -87,7 +87,7 @@ class UserDaoTest {
 
         List<User> filteredUsers = userDao.filterBy(lastNamePredicate);
 
- //       assertEquals(1, filteredUsers.size(), "Должен быть найден только один пользователь с фамилией 'Boy'");
+        //       assertEquals(1, filteredUsers.size(), "Должен быть найден только один пользователь с фамилией 'Boy'");
         assertEquals("Boy", filteredUsers.get(0).getLastName(), "Фамилия должна быть 'Boy'");
 
         filteredUsers.forEach(System.out::println);

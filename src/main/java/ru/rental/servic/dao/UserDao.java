@@ -56,6 +56,34 @@ public class UserDao implements DAO<User, Integer> {
     private static final String BD_USERNAME = "db.username";
     private static final String BD_PASSWORD = "db.password";
 
+    public static boolean checkIfTableExists(String tableName) {
+        String query = """
+                SELECT EXISTS (
+                    SELECT FROM information_schema.tables 
+                    WHERE table_name = ?
+                )
+                """;
+
+        try (final var connection = DriverManager.getConnection(
+                PropertiesUtil.getProperties(BD_URL),
+                PropertiesUtil.getProperties(BD_USERNAME),
+                PropertiesUtil.getProperties(BD_PASSWORD));
+             final var preparedStatement = connection.prepareStatement(query)) {
+
+            preparedStatement.setString(1, tableName.toLowerCase());
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                return resultSet.getBoolean(1);
+            }
+
+        } catch (SQLException e) {
+            throw new IllegalStateException("Ошибка существования таблицы", e);
+        }
+
+        return false;
+    }
+
     @Override
     public void createTable() {
 
@@ -216,14 +244,6 @@ public class UserDao implements DAO<User, Integer> {
         return users;
     }
 
-    @Override
-    public List<User> filterBy(Predicate<User> predicate) {
-        List<User> allUsers = getAllUsers();
-        return allUsers.stream()
-                .filter(predicate)
-                .toList();
-    }
-
 //    public void deleteAllUsers() {
 //        try (final var connection = DriverManager.getConnection(
 //                PropertiesUtil.getProperties(BD_URL),
@@ -236,31 +256,11 @@ public class UserDao implements DAO<User, Integer> {
 //        }
 //    }
 
-    public static boolean checkIfTableExists(String tableName) {
-        String query = """
-                SELECT EXISTS (
-                    SELECT FROM information_schema.tables 
-                    WHERE table_name = ?
-                )
-                """;
-
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
-             final var preparedStatement = connection.prepareStatement(query)) {
-
-            preparedStatement.setString(1, tableName.toLowerCase());
-            ResultSet resultSet = preparedStatement.executeQuery();
-
-            if (resultSet.next()) {
-                return resultSet.getBoolean(1);
-            }
-
-        } catch (SQLException e) {
-            throw new IllegalStateException("Ошибка существования таблицы", e);
-        }
-
-        return false;
+    @Override
+    public List<User> filterBy(Predicate<User> predicate) {
+        List<User> allUsers = getAllUsers();
+        return allUsers.stream()
+                .filter(predicate)
+                .toList();
     }
 }

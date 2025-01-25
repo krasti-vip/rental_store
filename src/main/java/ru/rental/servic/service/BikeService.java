@@ -1,5 +1,7 @@
 package ru.rental.servic.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import ru.rental.servic.dao.BikeDao;
 import ru.rental.servic.dto.BikeDto;
 import ru.rental.servic.model.Bike;
@@ -8,9 +10,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 
+@Component
 public class BikeService implements Service<BikeDto, Integer> {
 
-    private final BikeDao bikeDao = new BikeDao();
+    private final BikeDao bikeDao;
+
+    @Autowired
+    public BikeService(BikeDao bikeDao) {
+        this.bikeDao = bikeDao;
+    }
+
 
     /**
      * метод который позволяет осуществлять поиск нужного объекта по его id тут это его номер по порядку,

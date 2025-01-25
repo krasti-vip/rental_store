@@ -4,12 +4,28 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import ru.rental.servic.dao.BikeDao;
 import ru.rental.servic.model.Bike;
+
 import java.util.List;
 import java.util.function.Predicate;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class BikeDaoTest {
+import static org.junit.jupiter.api.Assertions.*;
+
+class BikeDaoTest extends BaseTest {
+
+    // SINGLETON - это обьект в единственном числе для всей программы
+    // PROTOTYPE - повторное создание одного и того же обьекта когда он требуется
+    // DI - внедрение обьектов в другие обьекты через конструктор или сет или рефлексию(внутрь приватного не финального поля)
+    // Context - хранилище bean(java обьекты)
+
+
+    @Test
+    void bikeDaoGetA() {
+        final var bikeDao = new BikeDao();
+        final var allBikes = bikeDao.getAllBikes();
+
+        assertEquals(allBikes.size(), 5);
+    }
+
 
     @Test
     @DisplayName("Тестирования всего Bike")

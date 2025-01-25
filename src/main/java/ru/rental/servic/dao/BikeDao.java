@@ -1,6 +1,7 @@
 package ru.rental.servic.dao;
 
 
+import org.springframework.stereotype.Component;
 import ru.rental.servic.model.Bike;
 import ru.rental.servic.util.PropertiesUtil;
 
@@ -12,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 
+@Component
 public class BikeDao implements DAO<Bike, Integer> {
 
     private static final String SELECT_BIKE = """
@@ -54,6 +56,34 @@ public class BikeDao implements DAO<Bike, Integer> {
     private static final String BD_URL = "db.url";
     private static final String BD_USERNAME = "db.username";
     private static final String BD_PASSWORD = "db.password";
+
+    public static boolean checkIfTableExistsCar(String tableName) {
+        String query = """
+                SELECT EXISTS (
+                    SELECT FROM information_schema.tables 
+                    WHERE table_name = ?
+                )
+                """;
+
+        try (final var connection = DriverManager.getConnection(
+                PropertiesUtil.getProperties(BD_URL),
+                PropertiesUtil.getProperties(BD_USERNAME),
+                PropertiesUtil.getProperties(BD_PASSWORD));
+             final var preparedStatement = connection.prepareStatement(query)) {
+
+            preparedStatement.setString(1, tableName.toLowerCase());
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                return resultSet.getBoolean(1);
+            }
+
+        } catch (SQLException e) {
+            throw new IllegalStateException("Ошибка существования таблицы", e);
+        }
+
+        return false;
+    }
 
     @Override
     public void createTable() {
@@ -183,6 +213,18 @@ public class BikeDao implements DAO<Bike, Integer> {
                 .toList();
     }
 
+//    public void deleteAllBikes() {
+//        try (final var connection = DriverManager.getConnection(
+//                PropertiesUtil.getProperties(BD_URL),
+//                PropertiesUtil.getProperties(BD_USERNAME),
+//                PropertiesUtil.getProperties(BD_PASSWORD));
+//             final var preparedStatement = connection.prepareStatement("DELETE FROM bikes")) {
+//            preparedStatement.executeUpdate();
+//        } catch (SQLException e) {
+//            throw new IllegalStateException("Ошибка удаления всех мотиков", e);
+//        }
+//    }
+
     public List<Bike> getAllBikes() {
         List<Bike> bikes = new ArrayList<>();
 
@@ -209,45 +251,5 @@ public class BikeDao implements DAO<Bike, Integer> {
         }
 
         return bikes;
-    }
-
-//    public void deleteAllBikes() {
-//        try (final var connection = DriverManager.getConnection(
-//                PropertiesUtil.getProperties(BD_URL),
-//                PropertiesUtil.getProperties(BD_USERNAME),
-//                PropertiesUtil.getProperties(BD_PASSWORD));
-//             final var preparedStatement = connection.prepareStatement("DELETE FROM bikes")) {
-//            preparedStatement.executeUpdate();
-//        } catch (SQLException e) {
-//            throw new IllegalStateException("Ошибка удаления всех мотиков", e);
-//        }
-//    }
-
-    public static boolean checkIfTableExistsCar(String tableName) {
-        String query = """
-                SELECT EXISTS (
-                    SELECT FROM information_schema.tables 
-                    WHERE table_name = ?
-                )
-                """;
-
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
-             final var preparedStatement = connection.prepareStatement(query)) {
-
-            preparedStatement.setString(1, tableName.toLowerCase());
-            ResultSet resultSet = preparedStatement.executeQuery();
-
-            if (resultSet.next()) {
-                return resultSet.getBoolean(1);
-            }
-
-        } catch (SQLException e) {
-            throw new IllegalStateException("Ошибка существования таблицы", e);
-        }
-
-        return false;
     }
 }
