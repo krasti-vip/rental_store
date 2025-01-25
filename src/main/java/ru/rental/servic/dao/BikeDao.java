@@ -2,210 +2,252 @@ package ru.rental.servic.dao;
 
 
 import ru.rental.servic.model.Bike;
+import ru.rental.servic.util.PropertiesUtil;
 
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 
 public class BikeDao implements DAO<Bike, Integer> {
 
-    private final List<Bike> bd = new ArrayList<>() {{
-        add(Bike.builder()
-                .id(1)
-                .name("Ямаха")
-                .price(777)
-                .horsePower(45)
-                .volume(0.750)
-                .build()
-        );
-        add(Bike.builder()
-                .id(2)
-                .name("Хонда")
-                .price(775)
-                .horsePower(42)
-                .volume(0.700)
-                .build()
-        );
-        add(Bike.builder()
-                .id(3)
-                .name("Дукати")
-                .price(770)
-                .horsePower(78)
-                .volume(1.000)
-                .build()
-        );
-        add(Bike.builder()
-                .id(4)
-                .name("Харли Дэвидсон")
-                .price(1250)
-                .horsePower(101)
-                .volume(2.300)
-                .build()
-        );
-        add(Bike.builder()
-                .id(5)
-                .name("Кавасаки")
-                .price(500)
-                .horsePower(35)
-                .volume(0.350)
-                .build()
-        );
-        add(Bike.builder()
-                .id(6)
-                .name("Ямаха GT")
-                .price(1000)
-                .horsePower(70)
-                .volume(1.000)
-                .build()
-        );
-        add(Bike.builder()
-                .id(7)
-                .name("Хонда GTI")
-                .price(1100)
-                .horsePower(85)
-                .volume(0.900)
-                .build()
-        );
-        add(Bike.builder()
-                .id(8)
-                .name("Дукати super Hrust")
-                .price(1800)
-                .horsePower(95)
-                .volume(1.500)
-                .build()
-        );
-        add(Bike.builder()
-                .id(9)
-                .name("Подержанный Харли Дэвидсон")
-                .price(650)
-                .horsePower(101)
-                .volume(2.300)
-                .build()
-        );
-        add(Bike.builder()
-                .id(10)
-                .name("Кавасаки битый")
-                .price(250)
-                .horsePower(35)
-                .volume(0.350)
-                .build()
-        );
-    }};
+    private static final String SELECT_BIKE = """
+            SELECT id, name, price, horse_power, volume FROM bikes WHERE id = ?
+            """;
+
+    private static final String CREATE_TABLE = """
+            CREATE TABLE IF NOT EXISTS bikes(
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(50) NOT NULL,
+                price DOUBLE PRECISION NOT NULL,
+                horse_power INT NOT NULL,
+                volume DOUBLE PRECISION NOT NULL
+            )
+            """;
+
+    private static final String UPDATE_BIKE = """
+            UPDATE bikes 
+            SET
+                name = ?,
+                price = ?,
+                horse_power = ?,
+                volume = ?
+            WHERE id = ?
+            """;
+
+    private static final String INSERT_BIKE = """
+            INSERT INTO bikes (name, price, horse_power, volume)
+            VALUES (?, ?, ?, ?)
+            """;
+
+    private static final String DELETE_BIKE = """
+            DELETE FROM bikes WHERE id = ?
+            """;
+
+    private static final String SELECT_ALL_BIKES = """
+            SELECT id, name, price, horse_power, volume FROM bikes
+            """;
+
+    private static final String BD_URL = "db.url";
+    private static final String BD_USERNAME = "db.username";
+    private static final String BD_PASSWORD = "db.password";
 
     @Override
     public void createTable() {
+        try (final var connection = DriverManager.getConnection(
+                PropertiesUtil.getProperties(BD_URL),
+                PropertiesUtil.getProperties(BD_USERNAME),
+                PropertiesUtil.getProperties(BD_PASSWORD));
+             final var preparedStatement = connection.prepareStatement(CREATE_TABLE)) {
 
+            preparedStatement.execute();
+
+        } catch (SQLException e) {
+            throw new IllegalStateException("Ошибка создания таблицы", e);
+        }
     }
 
-    /**
-     * метод который возращает нужный объект по запросу его id, в нашем классе это его номер по порядку, циклом фор эйч
-     * пробигаем по массиву и перебираем каждый объект, как он нашел нужный, путем сравнения с запросом через иф
-     * и возращает найденный, иначе ничего не вернет
-     *
-     * @param id
-     * @return
-     */
     @Override
     public Bike get(Integer id) {
-        for (Bike bike : bd) {
-            if (bike.getId() == id) {
+        try (final var connection = DriverManager.getConnection(
+                PropertiesUtil.getProperties(BD_URL),
+                PropertiesUtil.getProperties(BD_USERNAME),
+                PropertiesUtil.getProperties(BD_PASSWORD));
+             final var preparedStatement = connection.prepareStatement(SELECT_BIKE)) {
 
-                return bike;
+            preparedStatement.setInt(1, id);
+            final var resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                return Bike.builder()
+                        .id(resultSet.getInt("id"))
+                        .name(resultSet.getString("name"))
+                        .price(resultSet.getDouble("price"))
+                        .horsePower(resultSet.getInt("horse_power"))
+                        .volume(resultSet.getDouble("volume"))
+                        .build();
+            } else {
+                return null;
             }
-        }
 
-        return null;
+        } catch (SQLException e) {
+            throw new IllegalStateException("Ошибка передачи байка", e);
+        }
     }
 
-    /**
-     * метод котороый обновляет объект, путем поиска через метод гет, береберает массив через цикл фор, для поиска нужного
-     * индекса, когда он найден, присваивает его объекту поиска, если у этого объекта такой же индекс который мы искали,
-     * заменяем его на объект который передали методу через сет, если индекс объекта не найден то ничего не меняет потому что
-     * вернем налл
-     *
-     * @param id
-     * @param obj
-     * @return
-     */
     @Override
     public Bike update(Integer id, Bike obj) {
-        for (int i = 0; i < bd.size(); i++) {
-            Bike bike = bd.get(i);
-            if (bike.getId() == id) {
-                bd.set(i, obj);
+        try (final var connection = DriverManager.getConnection(
+                PropertiesUtil.getProperties(BD_URL),
+                PropertiesUtil.getProperties(BD_USERNAME),
+                PropertiesUtil.getProperties(BD_PASSWORD));
+             final var preparedStatement = connection.prepareStatement(UPDATE_BIKE)) {
 
+            preparedStatement.setString(1, obj.getName());
+            preparedStatement.setDouble(2, obj.getPrice());
+            preparedStatement.setInt(3, obj.getHorsePower());
+            preparedStatement.setDouble(4, obj.getVolume());
+            preparedStatement.setInt(5, id);
+
+            int rowsAffected = preparedStatement.executeUpdate();
+
+            if (rowsAffected > 0) {
                 return obj;
+            } else {
+                return null;
             }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Ошибка обновления байка", e);
         }
-
-        return null;
     }
-
-    /**
-     * метод который сохраняет новый объект, проходим по массиву циклом фор, если объект с таким индексом найден,
-     * ничего не сохраняет и возращает налл, иначе добавляет новый объект
-     *
-     * @param obj
-     * @return
-     */
 
     @Override
     public Bike save(Bike obj) {
-        for (Bike bike : bd) {
-            if (bike.getId() == obj.getId()) {
-                return null;
-            }
-        }
-        bd.add(obj);
+        try (final var connection = DriverManager.getConnection(
+                PropertiesUtil.getProperties(BD_URL),
+                PropertiesUtil.getProperties(BD_USERNAME),
+                PropertiesUtil.getProperties(BD_PASSWORD));
+             final var preparedStatement = connection.prepareStatement(INSERT_BIKE, Statement.RETURN_GENERATED_KEYS)) {
 
-        return obj;
+            preparedStatement.setString(1, obj.getName());
+            preparedStatement.setDouble(2, obj.getPrice());
+            preparedStatement.setInt(3, obj.getHorsePower());
+            preparedStatement.setDouble(4, obj.getVolume());
+
+            int rowsAffected = preparedStatement.executeUpdate();
+
+            if (rowsAffected > 0) {
+                try (var generatedKeys = preparedStatement.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        int generatedId = generatedKeys.getInt(1);
+                        obj.setId(generatedId);
+                        return obj;
+                    }
+                }
+            }
+
+            return null;
+
+        } catch (SQLException e) {
+            throw new IllegalStateException("Ошибка сохранения байка", e);
+        }
     }
 
-    /**
-     * метод который удаляет объект, проходит по массиву для поиска объекта по индексу, если индекс найден удаляет объект
-     * передает тру что объект найден и удален, если индекса нет то вернет фолс что объект не удален
-     *
-     * @param id
-     * @return
-     */
     @Override
     public boolean delete(Integer id) {
-        for (int i = 0; i < bd.size(); i++) {
-            Bike bike = bd.get(i);
-            if (bike.getId() == id) {
-                bd.remove(i);
+        try (final var connection = DriverManager.getConnection(
+                PropertiesUtil.getProperties(BD_URL),
+                PropertiesUtil.getProperties(BD_USERNAME),
+                PropertiesUtil.getProperties(BD_PASSWORD));
+             final var preparedStatement = connection.prepareStatement(DELETE_BIKE)) {
 
-                return true;
+            preparedStatement.setInt(1, id);
+
+            int rowsAffected = preparedStatement.executeUpdate();
+
+            return rowsAffected > 0;
+
+        } catch (SQLException e) {
+            throw new IllegalStateException("Ошибка удаления байка", e);
+        }
+    }
+
+    @Override
+    public List<Bike> filterBy(Predicate<Bike> predicate) {
+        List<Bike> allBikes = getAllBikes();
+        return allBikes.stream()
+                .filter(predicate)
+                .toList();
+    }
+
+    public List<Bike> getAllBikes() {
+        List<Bike> bikes = new ArrayList<>();
+
+        try (final var connection = DriverManager.getConnection(
+                PropertiesUtil.getProperties(BD_URL),
+                PropertiesUtil.getProperties(BD_USERNAME),
+                PropertiesUtil.getProperties(BD_PASSWORD));
+             final var preparedStatement = connection.prepareStatement(SELECT_ALL_BIKES);
+             final var resultSet = preparedStatement.executeQuery()) {
+
+            while (resultSet.next()) {
+                Bike bike = Bike.builder()
+                        .id(resultSet.getInt("id"))
+                        .name(resultSet.getString("name"))
+                        .price(resultSet.getDouble("price"))
+                        .horsePower(resultSet.getInt("horse_power"))
+                        .volume(resultSet.getDouble("volume"))
+                        .build();
+                bikes.add(bike);
             }
+
+        } catch (SQLException e) {
+            throw new IllegalStateException("Ошибка передачи всех байков", e);
+        }
+
+        return bikes;
+    }
+
+//    public void deleteAllBikes() {
+//        try (final var connection = DriverManager.getConnection(
+//                PropertiesUtil.getProperties(BD_URL),
+//                PropertiesUtil.getProperties(BD_USERNAME),
+//                PropertiesUtil.getProperties(BD_PASSWORD));
+//             final var preparedStatement = connection.prepareStatement("DELETE FROM bikes")) {
+//            preparedStatement.executeUpdate();
+//        } catch (SQLException e) {
+//            throw new IllegalStateException("Ошибка удаления всех мотиков", e);
+//        }
+//    }
+
+    public static boolean checkIfTableExistsCar(String tableName) {
+        String query = """
+                SELECT EXISTS (
+                    SELECT FROM information_schema.tables 
+                    WHERE table_name = ?
+                )
+                """;
+
+        try (final var connection = DriverManager.getConnection(
+                PropertiesUtil.getProperties(BD_URL),
+                PropertiesUtil.getProperties(BD_USERNAME),
+                PropertiesUtil.getProperties(BD_PASSWORD));
+             final var preparedStatement = connection.prepareStatement(query)) {
+
+            preparedStatement.setString(1, tableName.toLowerCase());
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                return resultSet.getBoolean(1);
+            }
+
+        } catch (SQLException e) {
+            throw new IllegalStateException("Ошибка существования таблицы", e);
         }
 
         return false;
     }
-
-    /**
-     * метод который фильтрует объект с помощью фильтра который нужно передать в предикат, запускается стрим, лист фильтруется
-     * переданым предикатом, и сохраняется в новый лист
-     *
-     * @param predicate
-     * @return
-     */
-    @Override
-    public List<Bike> filterBy(Predicate<Bike> predicate) {
-
-        return bd.stream().filter(predicate).toList();
-    }
-
-    /**
-     * метод который просто возращает копию всего массива
-     *
-     * @return
-     */
-    public List<Bike> getAll() {
-
-        return bd;
-    }
-//    @Override
-//    public List<Bike> filterBy(Predicate<Bike> predicate) {
-//        return bd.stream().filter(bike -> bike.getId() % 2 == 0).toList();
-//    }
 }

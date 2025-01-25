@@ -23,7 +23,7 @@ public class CarServlet extends HttpServlet {
         final var writer = resp.getWriter();
 
         for (CarDto carDto : allCarDto) {
-            writer.write(carDto.getName() + " ");
+            writer.write(carDto.getTitle() + " ");
         }
 
         writer.close();

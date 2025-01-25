@@ -113,7 +113,7 @@ public class BikeService implements Service<BikeDto, Integer> {
     @Override
     public List<BikeDto> filterBy(Predicate<BikeDto> predicate) {
 
-        return bikeDao.getAll().stream()
+        return bikeDao.getAllBikes().stream()
                 .map(bike -> this.convertByDto(bike))
                 .filter(predicate)
                 .toList();
@@ -126,7 +126,7 @@ public class BikeService implements Service<BikeDto, Integer> {
      */
     @Override
     public List<BikeDto> getAll() {
-        return bikeDao.getAll().stream().map(bike -> convertByDto(bike)).toList(); //как и зачем тестировать
+        return bikeDao.getAllBikes().stream().map(bike -> convertByDto(bike)).toList(); //как и зачем тестировать
     }
 
     /**
