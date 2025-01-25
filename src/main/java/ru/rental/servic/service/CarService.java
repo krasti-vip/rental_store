@@ -10,11 +10,6 @@ import java.util.function.Predicate;
 
 public class CarService implements Service<CarDto, Integer> {
 
-    // mvc(model, view, controller)
-    // user (дай мне машину под id 3) google.com/get/car/3 -> servlet(google.com/get/car/3) -> service.get(3) <- (convert) -> dao.get(3) -> bd
-    // dto (data, transfer, object)
-
-    // (frontend)  <- (name(String), (double)price, attribute) | (/get/car/3) ->  (backend)
     private final CarDao carDao = new CarDao();
 
     /**
@@ -58,7 +53,7 @@ public class CarService implements Service<CarDto, Integer> {
 
         var updatedCar = Car.builder()
                 .id(maybeCar.getId())
-                .name(obj.getName())
+                .title(obj.getTitle())
                 .price(obj.getPrice())
                 .volume(obj.getVolume())
                 .horsePower(obj.getHorsePower())
@@ -78,7 +73,7 @@ public class CarService implements Service<CarDto, Integer> {
     @Override
     public CarDto save(CarDto obj) {
         var newCar = Car.builder()
-                .name(obj.getName())
+                .title(obj.getTitle())
                 .price(obj.getPrice())
                 .volume(obj.getVolume())
                 .horsePower(obj.getHorsePower())
@@ -118,8 +113,8 @@ public class CarService implements Service<CarDto, Integer> {
     @Override
     public List<CarDto> filterBy(Predicate<CarDto> predicate) {
 
-        return carDao.getAll().stream()
-                .map(car -> this.convertByDto(car))
+        return carDao.getAllCars().stream()
+                .map(this::convertByDto)
                 .filter(predicate)
                 .toList();
     }
@@ -131,7 +126,7 @@ public class CarService implements Service<CarDto, Integer> {
      */
     @Override
     public List<CarDto> getAll() {
-        return carDao.getAll().stream().map(car -> convertByDto(car)).toList();
+        return carDao.getAllCars().stream().map(this::convertByDto).toList();
     }
 
     /**
@@ -143,7 +138,7 @@ public class CarService implements Service<CarDto, Integer> {
     private CarDto convertByDto(Car car) {
         return CarDto.builder()
                 .color(car.getColor())
-                .name(car.getName())
+                .title(car.getTitle())
                 .price(car.getPrice())
                 .volume(car.getVolume())
                 .horsePower(car.getHorsePower())

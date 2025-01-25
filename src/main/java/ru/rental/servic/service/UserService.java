@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-public class UserService implements Service<UserDto, String> {
+public class UserService implements Service<UserDto, Integer> {
 
     private final UserDao userDao = new UserDao();
 
@@ -23,7 +23,7 @@ public class UserService implements Service<UserDto, String> {
      * @return
      */
     @Override
-    public Optional<UserDto> get(String id) {
+    public Optional<UserDto> get(Integer id) {
         final var maybeUser = userDao.get(id);
 
         if (maybeUser == null) {
@@ -44,7 +44,7 @@ public class UserService implements Service<UserDto, String> {
      * @return
      */
     @Override
-    public Optional<UserDto> update(String id, UserDto obj) {
+    public Optional<UserDto> update(Integer id, UserDto obj) {
         var maybeUser = userDao.get(id);
 
         if (maybeUser == null) {
@@ -74,6 +74,7 @@ public class UserService implements Service<UserDto, String> {
     @Override
     public UserDto save(UserDto obj) {
         var newUser = User.builder()
+                .userName(obj.getUserName())
                 .firstName(obj.getFirstName())
                 .lastName(obj.getLastName())
                 .passport(obj.getPassport())
@@ -94,7 +95,7 @@ public class UserService implements Service<UserDto, String> {
      * @return
      */
     @Override
-    public boolean delete(String id) {
+    public boolean delete(Integer id) {
         var maybeUser = userDao.get(id);
 
         if (maybeUser == null) {
@@ -115,7 +116,12 @@ public class UserService implements Service<UserDto, String> {
     @Override
     public List<UserDto> filterBy(Predicate<UserDto> predicate) {
 
-        return null;
+        List<User> users = userDao.getAllUsers();
+
+        return users.stream()
+                .map(this::convertByDto)
+                .filter(predicate)
+                .toList();
     }
 
     /**
@@ -125,7 +131,12 @@ public class UserService implements Service<UserDto, String> {
      */
     @Override
     public List<UserDto> getAll() {
-        return null;
+
+        List<User> users = userDao.getAllUsers();
+
+        return users.stream()
+                .map(this::convertByDto)
+                .toList();
     }
 
     /**
@@ -136,6 +147,7 @@ public class UserService implements Service<UserDto, String> {
      */
     private UserDto convertByDto(User user) {
         return UserDto.builder()
+                .id(user.getId())
                 .userName(user.getUserName())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())

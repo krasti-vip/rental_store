@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.example</groupId>
-    <artifactId>shaiya-game</artifactId>
+    <artifactId>rental_store</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <properties>
@@ -114,7 +114,7 @@
                                         <limit>
                                             <counter>LINE</counter> <!-- Проверка покрытия ветвлений -->
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.60</minimum> <!-- Минимальное допустимое значение -->
+                                            <minimum>0.80</minimum> <!-- Минимальное допустимое значение -->
                                         </limit>
                                     </limits>
                                 </rule>

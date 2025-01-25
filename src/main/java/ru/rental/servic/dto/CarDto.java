@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class CarDto {
 
-    private String name;
+    private String title;
 
     private double price;
 
