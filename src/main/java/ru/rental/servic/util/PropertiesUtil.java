@@ -22,8 +22,7 @@ public class PropertiesUtil {
         try (final var resourceAsStream = PropertiesUtil.class.getClassLoader().getResourceAsStream("application.properties")) {
             PROPERTIES.load(resourceAsStream);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new IllegalStateException("Ошибка пропертиУтил загрузка данных", e);
         }
     }
-
 }

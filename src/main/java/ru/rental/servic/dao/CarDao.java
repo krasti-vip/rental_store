@@ -1,9 +1,9 @@
 package ru.rental.servic.dao;
 
+import org.springframework.stereotype.Component;
 import ru.rental.servic.model.Car;
-import ru.rental.servic.util.PropertiesUtil;
+import ru.rental.servic.util.ConnectionManager;
 
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 
+@Component
 public class CarDao implements DAO<Car, Integer> {
 
     private static final String SELECT_CAR = """
@@ -52,11 +53,14 @@ public class CarDao implements DAO<Car, Integer> {
             SELECT id, title, price, horse_power, volume, color FROM cars
             """;
 
-    private static final String BD_URL = "db.url";
-    private static final String BD_USERNAME = "db.username";
-    private static final String BD_PASSWORD = "db.password";
-
-    public static boolean checkIfTableExistsCar(String tableName) {
+    /**
+     * Метод проверяет по переданному названию таблицы, ее существование, вернет или True, или False
+     *
+     * @param tableName
+     * @return
+     */
+    @Override
+    public boolean checkIfTableExists(String tableName) {
         String query = """
                 SELECT EXISTS (
                     SELECT FROM information_schema.tables 
@@ -64,10 +68,7 @@ public class CarDao implements DAO<Car, Integer> {
                 )
                 """;
 
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(query)) {
 
             preparedStatement.setString(1, tableName.toLowerCase());
@@ -84,12 +85,14 @@ public class CarDao implements DAO<Car, Integer> {
         return false;
     }
 
+    /**
+     * Метод создания таблицы в базе данных,
+     * проверка на уникальность таблицы отсутствует, возможно дублирование, если по какой-то причине таблица не будет
+     * создана выкинет Exception IllegalStateException("Ошибка создания таблицы", e);
+     */
     @Override
     public void createTable() {
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(CREATE_TABLE)) {
 
             preparedStatement.execute();
@@ -99,12 +102,20 @@ public class CarDao implements DAO<Car, Integer> {
         }
     }
 
+    /**
+     * Метод возвращает объект по его id, присутствует проверка на null переданного id, в этом
+     * случае бросит ошибку IllegalArgumentException("ID obj не может быть null"), если id существует, но
+     * метод не смог вернуть его то бросит ошибку IllegalStateException("Ошибка передачи obj", e);
+     *
+     * @param id
+     * @return
+     */
     @Override
     public Car get(Integer id) {
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        if (id == null) {
+            throw new IllegalArgumentException("ID Car не может быть null");
+        }
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(SELECT_CAR)) {
 
             preparedStatement.setInt(1, id);
@@ -122,18 +133,23 @@ public class CarDao implements DAO<Car, Integer> {
             } else {
                 return null;
             }
-
         } catch (SQLException e) {
             throw new IllegalStateException("Ошибка передачи авто", e);
         }
     }
 
+    /**
+     * Метод обновляет объект по переданному id и новому объекту для обновления, отсутствует проверка
+     * на null (могут быть проблемы), если обновление по другим причинам не произошло,
+     * бросит exception IllegalStateException("Ошибка обновления obj", e);
+     *
+     * @param id
+     * @param obj
+     * @return
+     */
     @Override
     public Car update(Integer id, Car obj) {
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(UPDATE_CAR)) {
 
             preparedStatement.setString(1, obj.getTitle());
@@ -155,12 +171,16 @@ public class CarDao implements DAO<Car, Integer> {
         }
     }
 
+    /**
+     * Метод сохраняет новый переданный объект, отсутствует проверка на null (осторожней),
+     * если по другой причине не сохранится obj, кинет исключение IllegalStateException("Ошибка сохранения obj", e);
+     *
+     * @param obj
+     * @return
+     */
     @Override
     public Car save(Car obj) {
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(INSERT_CAR, Statement.RETURN_GENERATED_KEYS)) {
 
             preparedStatement.setString(1, obj.getTitle());
@@ -188,12 +208,16 @@ public class CarDao implements DAO<Car, Integer> {
         }
     }
 
+    /**
+     * Метод удаляет объект по переданному id, отсутствует проверка на null (осторожней),
+     * в другом случае если удаление не удалось, кинет исключение IllegalStateException("Ошибка удаления obj", e);
+     *
+     * @param id
+     * @return
+     */
     @Override
     public boolean delete(Integer id) {
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(DELETE_CAR)) {
 
             preparedStatement.setInt(1, id);
@@ -207,33 +231,31 @@ public class CarDao implements DAO<Car, Integer> {
         }
     }
 
+    /**
+     * Метод осуществляет фильтрацию всех объектов находящихся в базе данных по переданному предикату и возвращает лист
+     * с объектами удовлетворяющими критерии фильтрации, отсутствует проверка на null
+     *
+     * @param predicate
+     * @return
+     */
     @Override
     public List<Car> filterBy(Predicate<Car> predicate) {
-        List<Car> allCars = getAllCars();
+        List<Car> allCars = getAll();
         return allCars.stream()
                 .filter(predicate)
                 .toList();
     }
 
-//    public void deleteAllCars() {
-//        try (final var connection = DriverManager.getConnection(
-//                PropertiesUtil.getProperties(BD_URL),
-//                PropertiesUtil.getProperties(BD_USERNAME),
-//                PropertiesUtil.getProperties(BD_PASSWORD));
-//             final var preparedStatement = connection.prepareStatement("DELETE FROM cars")) {
-//            preparedStatement.executeUpdate();
-//        } catch (SQLException e) {
-//            throw new IllegalStateException("Ошибка удаления всех auto", e);
-//        }
-//    }
-
-    public List<Car> getAllCars() {
+    /**
+     * Метод возвращающий все объекты класса которые хранятся в базе данных, если передача не удалась,
+     * кинет ошибку IllegalStateException("Ошибка передачи всех obj", e);
+     *
+     * @return
+     */
+    public List<Car> getAll() {
         List<Car> cars = new ArrayList<>();
 
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(SELECT_ALL_CARS);
              final var resultSet = preparedStatement.executeQuery()) {
 
