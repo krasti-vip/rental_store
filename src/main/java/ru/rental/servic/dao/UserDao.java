@@ -1,9 +1,9 @@
 package ru.rental.servic.dao;
 
+import org.springframework.stereotype.Component;
 import ru.rental.servic.model.User;
-import ru.rental.servic.util.PropertiesUtil;
+import ru.rental.servic.util.ConnectionManager;
 
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 
+@Component
 public class UserDao implements DAO<User, Integer> {
 
     private static final String SELECT_USER = """
@@ -52,11 +53,7 @@ public class UserDao implements DAO<User, Integer> {
     private static final String SELECT_ALL_USERS =
             "SELECT id, user_name, first_name, last_name, passport, email, bank_card FROM users";
 
-    private static final String BD_URL = "db.url";
-    private static final String BD_USERNAME = "db.username";
-    private static final String BD_PASSWORD = "db.password";
-
-    public static boolean checkIfTableExists(String tableName) {
+    public boolean checkIfTableExists(String tableName) {
         String query = """
                 SELECT EXISTS (
                     SELECT FROM information_schema.tables 
@@ -64,10 +61,7 @@ public class UserDao implements DAO<User, Integer> {
                 )
                 """;
 
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(query)) {
 
             preparedStatement.setString(1, tableName.toLowerCase());
@@ -87,10 +81,7 @@ public class UserDao implements DAO<User, Integer> {
     @Override
     public void createTable() {
 
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(CREATE_TABLE)) {
 
             preparedStatement.execute();
@@ -102,10 +93,10 @@ public class UserDao implements DAO<User, Integer> {
 
     @Override
     public User get(Integer id) {
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        if (id == null) {
+            return null;
+        }
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(SELECT_USER)) {
 
             preparedStatement.setInt(1, id);
@@ -133,10 +124,7 @@ public class UserDao implements DAO<User, Integer> {
 
     @Override
     public User update(Integer id, User obj) {
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(UPDATE_USER)) {
 
             preparedStatement.setString(1, obj.getUserName());
@@ -161,10 +149,7 @@ public class UserDao implements DAO<User, Integer> {
 
     @Override
     public User save(User obj) {
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(INSERT_USER, Statement.RETURN_GENERATED_KEYS)) {
 
             preparedStatement.setString(1, obj.getUserName());
@@ -197,10 +182,7 @@ public class UserDao implements DAO<User, Integer> {
 
     @Override
     public boolean delete(Integer id) {
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(DELETE_USER)) {
 
             preparedStatement.setInt(1, id);
@@ -214,13 +196,10 @@ public class UserDao implements DAO<User, Integer> {
         }
     }
 
-    public List<User> getAllUsers() {
+    public List<User> getAll() {
         List<User> users = new ArrayList<>();
 
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(SELECT_ALL_USERS);
              final var resultSet = preparedStatement.executeQuery()) {
 
@@ -244,21 +223,9 @@ public class UserDao implements DAO<User, Integer> {
         return users;
     }
 
-//    public void deleteAllUsers() {
-//        try (final var connection = DriverManager.getConnection(
-//                PropertiesUtil.getProperties(BD_URL),
-//                PropertiesUtil.getProperties(BD_USERNAME),
-//                PropertiesUtil.getProperties(BD_PASSWORD));
-//             final var preparedStatement = connection.prepareStatement("DELETE FROM users")) {
-//            preparedStatement.executeUpdate();
-//        } catch (SQLException e) {
-//            throw new IllegalStateException("Ошибка удаления всех юзеров", e);
-//        }
-//    }
-
     @Override
     public List<User> filterBy(Predicate<User> predicate) {
-        List<User> allUsers = getAllUsers();
+        List<User> allUsers = getAll();
         return allUsers.stream()
                 .filter(predicate)
                 .toList();

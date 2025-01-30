@@ -16,4 +16,6 @@ public interface DAO<T, I> {
     boolean delete(I id);
 
     List<T> filterBy(Predicate<T> predicate);
+
+    List<T> getAll();
 }

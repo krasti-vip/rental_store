@@ -3,9 +3,7 @@ package ru.rental.servic.dao;
 
 import org.springframework.stereotype.Component;
 import ru.rental.servic.model.Bike;
-import ru.rental.servic.util.PropertiesUtil;
-
-import java.sql.DriverManager;
+import ru.rental.servic.util.ConnectionManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -53,11 +51,7 @@ public class BikeDao implements DAO<Bike, Integer> {
             SELECT id, name, price, horse_power, volume FROM bikes
             """;
 
-    private static final String BD_URL = "db.url";
-    private static final String BD_USERNAME = "db.username";
-    private static final String BD_PASSWORD = "db.password";
-
-    public static boolean checkIfTableExistsCar(String tableName) {
+    public boolean checkIfTableExistsCar(String tableName) {
         String query = """
                 SELECT EXISTS (
                     SELECT FROM information_schema.tables 
@@ -65,10 +59,7 @@ public class BikeDao implements DAO<Bike, Integer> {
                 )
                 """;
 
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(query)) {
 
             preparedStatement.setString(1, tableName.toLowerCase());
@@ -87,10 +78,7 @@ public class BikeDao implements DAO<Bike, Integer> {
 
     @Override
     public void createTable() {
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(CREATE_TABLE)) {
 
             preparedStatement.execute();
@@ -102,10 +90,10 @@ public class BikeDao implements DAO<Bike, Integer> {
 
     @Override
     public Bike get(Integer id) {
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        if (id == null) {
+            return null;
+        }
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(SELECT_BIKE)) {
 
             preparedStatement.setInt(1, id);
@@ -130,10 +118,7 @@ public class BikeDao implements DAO<Bike, Integer> {
 
     @Override
     public Bike update(Integer id, Bike obj) {
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(UPDATE_BIKE)) {
 
             preparedStatement.setString(1, obj.getName());
@@ -156,10 +141,7 @@ public class BikeDao implements DAO<Bike, Integer> {
 
     @Override
     public Bike save(Bike obj) {
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(INSERT_BIKE, Statement.RETURN_GENERATED_KEYS)) {
 
             preparedStatement.setString(1, obj.getName());
@@ -188,10 +170,7 @@ public class BikeDao implements DAO<Bike, Integer> {
 
     @Override
     public boolean delete(Integer id) {
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(DELETE_BIKE)) {
 
             preparedStatement.setInt(1, id);
@@ -207,31 +186,16 @@ public class BikeDao implements DAO<Bike, Integer> {
 
     @Override
     public List<Bike> filterBy(Predicate<Bike> predicate) {
-        List<Bike> allBikes = getAllBikes();
+        List<Bike> allBikes = getAll();
         return allBikes.stream()
                 .filter(predicate)
                 .toList();
     }
 
-//    public void deleteAllBikes() {
-//        try (final var connection = DriverManager.getConnection(
-//                PropertiesUtil.getProperties(BD_URL),
-//                PropertiesUtil.getProperties(BD_USERNAME),
-//                PropertiesUtil.getProperties(BD_PASSWORD));
-//             final var preparedStatement = connection.prepareStatement("DELETE FROM bikes")) {
-//            preparedStatement.executeUpdate();
-//        } catch (SQLException e) {
-//            throw new IllegalStateException("Ошибка удаления всех мотиков", e);
-//        }
-//    }
-
-    public List<Bike> getAllBikes() {
+    public List<Bike> getAll() {
         List<Bike> bikes = new ArrayList<>();
 
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(SELECT_ALL_BIKES);
              final var resultSet = preparedStatement.executeQuery()) {
 

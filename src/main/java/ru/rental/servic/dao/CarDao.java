@@ -1,9 +1,8 @@
 package ru.rental.servic.dao;
 
+import org.springframework.stereotype.Component;
 import ru.rental.servic.model.Car;
-import ru.rental.servic.util.PropertiesUtil;
-
-import java.sql.DriverManager;
+import ru.rental.servic.util.ConnectionManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -11,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 
+@Component
 public class CarDao implements DAO<Car, Integer> {
 
     private static final String SELECT_CAR = """
@@ -52,10 +52,6 @@ public class CarDao implements DAO<Car, Integer> {
             SELECT id, title, price, horse_power, volume, color FROM cars
             """;
 
-    private static final String BD_URL = "db.url";
-    private static final String BD_USERNAME = "db.username";
-    private static final String BD_PASSWORD = "db.password";
-
     public static boolean checkIfTableExistsCar(String tableName) {
         String query = """
                 SELECT EXISTS (
@@ -64,10 +60,7 @@ public class CarDao implements DAO<Car, Integer> {
                 )
                 """;
 
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(query)) {
 
             preparedStatement.setString(1, tableName.toLowerCase());
@@ -86,10 +79,7 @@ public class CarDao implements DAO<Car, Integer> {
 
     @Override
     public void createTable() {
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(CREATE_TABLE)) {
 
             preparedStatement.execute();
@@ -101,10 +91,10 @@ public class CarDao implements DAO<Car, Integer> {
 
     @Override
     public Car get(Integer id) {
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        if (id == null) {
+            return null;
+        }
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(SELECT_CAR)) {
 
             preparedStatement.setInt(1, id);
@@ -130,10 +120,7 @@ public class CarDao implements DAO<Car, Integer> {
 
     @Override
     public Car update(Integer id, Car obj) {
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(UPDATE_CAR)) {
 
             preparedStatement.setString(1, obj.getTitle());
@@ -157,10 +144,7 @@ public class CarDao implements DAO<Car, Integer> {
 
     @Override
     public Car save(Car obj) {
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(INSERT_CAR, Statement.RETURN_GENERATED_KEYS)) {
 
             preparedStatement.setString(1, obj.getTitle());
@@ -190,10 +174,7 @@ public class CarDao implements DAO<Car, Integer> {
 
     @Override
     public boolean delete(Integer id) {
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(DELETE_CAR)) {
 
             preparedStatement.setInt(1, id);
@@ -209,31 +190,16 @@ public class CarDao implements DAO<Car, Integer> {
 
     @Override
     public List<Car> filterBy(Predicate<Car> predicate) {
-        List<Car> allCars = getAllCars();
+        List<Car> allCars = getAll();
         return allCars.stream()
                 .filter(predicate)
                 .toList();
     }
 
-//    public void deleteAllCars() {
-//        try (final var connection = DriverManager.getConnection(
-//                PropertiesUtil.getProperties(BD_URL),
-//                PropertiesUtil.getProperties(BD_USERNAME),
-//                PropertiesUtil.getProperties(BD_PASSWORD));
-//             final var preparedStatement = connection.prepareStatement("DELETE FROM cars")) {
-//            preparedStatement.executeUpdate();
-//        } catch (SQLException e) {
-//            throw new IllegalStateException("Ошибка удаления всех auto", e);
-//        }
-//    }
-
-    public List<Car> getAllCars() {
+    public List<Car> getAll() {
         List<Car> cars = new ArrayList<>();
 
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(SELECT_ALL_CARS);
              final var resultSet = preparedStatement.executeQuery()) {
 
