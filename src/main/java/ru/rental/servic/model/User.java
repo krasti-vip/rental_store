@@ -24,4 +24,6 @@ public class User {
     private String email;
 
     private long bankCard;
+
+    // два листа с кар и байк куда будем складывать все что он арендует
 }

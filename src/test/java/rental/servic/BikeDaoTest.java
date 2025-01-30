@@ -2,21 +2,23 @@ package rental.servic;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.*;
 import ru.rental.servic.dao.BikeDao;
 import ru.rental.servic.model.Bike;
+
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class BikeDaoTest extends BaseBd {
 
+    private static final BikeDao BIKE_DAO = new BikeDao();
+
     // SINGLETON - это обьект в единственном числе для всей программы
     // PROTOTYPE - повторное создание одного и того же обьекта когда он требуется
-    // DI - внедрение обьектов в другие обьекты через конструктор или сет или рефлексию(внутрь приватного не финального поля)
-    // Context - хранилище bean(java обьекты)
-
-    @Test
     @DisplayName("Test getAllBike")
     void bikeDaoGetAll() {
         final var bikeDao = new BikeDao();
@@ -24,6 +26,8 @@ class BikeDaoTest extends BaseBd {
 
         assertEquals(5, allBikes.size());
     }
+    // DI - внедрение обьектов в другие обьекты через конструктор или сет или рефлексию(внутрь приватного не финального поля)
+    // Context - хранилище bean(java обьекты)
 
     @Test
     @DisplayName("Test creat Table")
@@ -36,14 +40,72 @@ class BikeDaoTest extends BaseBd {
         assertFalse(noCreat);
     }
 
-    @Test
+//    @ValueSource(ints = {1, 2, 3, 4, 5})
+//    @CsvFileSource()
+//    @CsvSource("sdasdasdsadas, sadasd, sadasdas, sdasd")
+    @ParameterizedTest
+    @MethodSource("sourceBike")
     @DisplayName("Test getBike")
-    void getBikeTest() {
-        BikeDao bikeDao = new BikeDao();
-        int bikeId = bikeDao.getAll().get(3).getId();
-        assertEquals(4, bikeId);
-        assertEquals("URAL", bikeDao.get(4).getName());
-        assertNull(bikeDao.get(8));
+    void getBikeTest(Bike sourceBike) {
+        final var bike = BIKE_DAO.get(sourceBike.getId());
+
+        assertAll(
+                () -> assertEquals(bike.getId(), sourceBike.getId()),
+                () -> assertEquals(bike.getName(), sourceBike.getName()),
+                () -> assertEquals(bike.getPrice(), sourceBike.getPrice()),
+                () -> assertEquals(bike.getVolume(), sourceBike.getVolume()),
+                () -> assertEquals(bike.getHorsePower(), sourceBike.getHorsePower())
+        );
+    }
+
+    private static Stream<Arguments> sourceBike() {
+        return Stream.of(
+                Arguments.of(
+                        Bike.builder()
+                                .id(1)
+                                .name("BMW")
+                                .price(2000)
+                                .horsePower(200)
+                                .volume(1.0)
+                                .build()
+                ),
+                Arguments.of(
+                        Bike.builder()
+                                .id(2)
+                                .name("SUZUKI")
+                                .price(30000)
+                                .horsePower(300)
+                                .volume(1.0)
+                                .build()
+                ),
+                Arguments.of(
+                        Bike.builder()
+                                .id(3)
+                                .name("YAMAHA")
+                                .price(40000)
+                                .horsePower(400)
+                                .volume(1.0)
+                                .build()
+                ),
+                Arguments.of(
+                        Bike.builder()
+                                .id(4)
+                                .name("URAL")
+                                .price(2000)
+                                .horsePower(200)
+                                .volume(1.0)
+                                .build()
+                ),
+                Arguments.of(
+                        Bike.builder()
+                                .id(5)
+                                .name("HONDA")
+                                .price(2000)
+                                .horsePower(200)
+                                .volume(1.0)
+                                .build()
+                )
+        );
     }
 
     @Test
