@@ -75,10 +75,20 @@ class UserDaoTest extends BaseBd {
         assertEquals(6, userDao.getAll().size());
         assertEquals("vandervud", userDao.getAll().get(5).getUserName());
         int idUser = userDao.getAll().get(5).getId();
-        assertEquals(6, idUser);
-        assertTrue(userDao.delete(idUser));
-        assertFalse(userDao.delete(9));
-        assertEquals(5, userDao.getAll().size());
+
+        assertAll(
+                () -> assertEquals(6, idUser),
+                () ->  assertTrue(userDao.delete(idUser)),
+                () -> assertFalse(userDao.delete(9)),
+                () -> assertEquals(5, userDao.getAll().size()),
+                () -> assertFalse(userDao.getAll().stream().anyMatch(u -> u.getUserName().equals("vandervud")))
+        );
+
+
+
+
+
+
     }
 
     @Test
