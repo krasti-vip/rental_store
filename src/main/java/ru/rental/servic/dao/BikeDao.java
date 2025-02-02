@@ -1,11 +1,8 @@
 package ru.rental.servic.dao;
 
-
 import org.springframework.stereotype.Component;
 import ru.rental.servic.model.Bike;
-import ru.rental.servic.util.PropertiesUtil;
-
-import java.sql.DriverManager;
+import ru.rental.servic.util.ConnectionManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -53,11 +50,14 @@ public class BikeDao implements DAO<Bike, Integer> {
             SELECT id, name, price, horse_power, volume FROM bikes
             """;
 
-    private static final String BD_URL = "db.url";
-    private static final String BD_USERNAME = "db.username";
-    private static final String BD_PASSWORD = "db.password";
-
-    public static boolean checkIfTableExistsCar(String tableName) {
+    /**
+     * Метод проверяет по переданному названию таблицы, ее существование, вернет или True, или False
+     *
+     * @param tableName
+     * @return
+     */
+    @Override
+    public boolean checkIfTableExists(String tableName) {
         String query = """
                 SELECT EXISTS (
                     SELECT FROM information_schema.tables 
@@ -65,10 +65,7 @@ public class BikeDao implements DAO<Bike, Integer> {
                 )
                 """;
 
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(query)) {
 
             preparedStatement.setString(1, tableName.toLowerCase());
@@ -85,12 +82,14 @@ public class BikeDao implements DAO<Bike, Integer> {
         return false;
     }
 
+    /**
+     * Метод создания таблицы в базе данных,
+     * проверка на уникальность таблицы отсутствует, возможно дублирование, если по какой-то причине таблица не будет
+     * создана выкинет Exception IllegalStateException("Ошибка создания таблицы", e);
+     */
     @Override
     public void createTable() {
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(CREATE_TABLE)) {
 
             preparedStatement.execute();
@@ -100,12 +99,20 @@ public class BikeDao implements DAO<Bike, Integer> {
         }
     }
 
+    /**
+     * Метод возвращает объект по его id, присутствует проверка на null переданного id, в этом
+     * случае бросит ошибку IllegalArgumentException("ID obj не может быть null"), если id существует, но
+     * метод не смог вернуть его то бросит ошибку IllegalStateException("Ошибка передачи obj", e);
+     *
+     * @param id
+     * @return
+     */
     @Override
     public Bike get(Integer id) {
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        if (id == null) {
+            throw new IllegalArgumentException("ID Bike не может быть null");
+        }
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(SELECT_BIKE)) {
 
             preparedStatement.setInt(1, id);
@@ -122,18 +129,23 @@ public class BikeDao implements DAO<Bike, Integer> {
             } else {
                 return null;
             }
-
         } catch (SQLException e) {
             throw new IllegalStateException("Ошибка передачи байка", e);
         }
     }
 
+    /**
+     * Метод обновляет объект по переданному id и новому объекту для обновления, отсутствует проверка
+     * на null (могут быть проблемы), если обновление по другим причинам не произошло,
+     * бросит exception IllegalStateException("Ошибка обновления obj", e);
+     *
+     * @param id
+     * @param obj
+     * @return
+     */
     @Override
     public Bike update(Integer id, Bike obj) {
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(UPDATE_BIKE)) {
 
             preparedStatement.setString(1, obj.getName());
@@ -154,12 +166,16 @@ public class BikeDao implements DAO<Bike, Integer> {
         }
     }
 
+    /**
+     * Метод сохраняет новый переданный объект, отсутствует проверка на null (осторожней),
+     * если по другой причине не сохранится obj, кинет исключение IllegalStateException("Ошибка сохранения obj", e);
+     *
+     * @param obj
+     * @return
+     */
     @Override
     public Bike save(Bike obj) {
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(INSERT_BIKE, Statement.RETURN_GENERATED_KEYS)) {
 
             preparedStatement.setString(1, obj.getName());
@@ -186,12 +202,16 @@ public class BikeDao implements DAO<Bike, Integer> {
         }
     }
 
+    /**
+     * Метод удаляет объект по переданному id, отсутствует проверка на null (осторожней),
+     * в другом случае если удаление не удалось, кинет исключение IllegalStateException("Ошибка удаления obj", e);
+     *
+     * @param id
+     * @return
+     */
     @Override
     public boolean delete(Integer id) {
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(DELETE_BIKE)) {
 
             preparedStatement.setInt(1, id);
@@ -205,33 +225,31 @@ public class BikeDao implements DAO<Bike, Integer> {
         }
     }
 
+    /**
+     * Метод осуществляет фильтрацию всех объектов находящихся в базе данных по переданному предикату и возвращает лист
+     * с объектами удовлетворяющими критерии фильтрации, отсутствует проверка на null
+     *
+     * @param predicate
+     * @return
+     */
     @Override
     public List<Bike> filterBy(Predicate<Bike> predicate) {
-        List<Bike> allBikes = getAllBikes();
+        List<Bike> allBikes = getAll();
         return allBikes.stream()
                 .filter(predicate)
                 .toList();
     }
 
-//    public void deleteAllBikes() {
-//        try (final var connection = DriverManager.getConnection(
-//                PropertiesUtil.getProperties(BD_URL),
-//                PropertiesUtil.getProperties(BD_USERNAME),
-//                PropertiesUtil.getProperties(BD_PASSWORD));
-//             final var preparedStatement = connection.prepareStatement("DELETE FROM bikes")) {
-//            preparedStatement.executeUpdate();
-//        } catch (SQLException e) {
-//            throw new IllegalStateException("Ошибка удаления всех мотиков", e);
-//        }
-//    }
-
-    public List<Bike> getAllBikes() {
+    /**
+     * Метод возвращающий все объекты класса которые хранятся в базе данных, если передача не удалась,
+     * кинет ошибку IllegalStateException("Ошибка передачи всех obj", e);
+     *
+     * @return
+     */
+    public List<Bike> getAll() {
         List<Bike> bikes = new ArrayList<>();
 
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(SELECT_ALL_BIKES);
              final var resultSet = preparedStatement.executeQuery()) {
 

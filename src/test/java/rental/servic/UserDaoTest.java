@@ -1,95 +1,99 @@
 package rental.servic;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import ru.rental.servic.dao.UserDao;
 import ru.rental.servic.model.User;
-
 import java.util.List;
 import java.util.function.Predicate;
-
 import static org.junit.jupiter.api.Assertions.*;
 
+class UserDaoTest extends BaseBd {
 
-class UserDaoTest {
+    UserDao userDao;
+
+    @BeforeEach
+    void setup() {
+        userDao = new UserDao();
+    }
 
     @Test
-    @DisplayName("Тестирование всей таблицы user")
-    void userTest() {
-        UserDao userDao = new UserDao();
+    @DisplayName("Test 5 users in table, method getAllUsers")
+    void userDaoGetAll() {
+        final var allUser = userDao.getAll();
+        assertEquals(5, allUser.size());
+    }
+
+    @Test
+    @DisplayName("Test creat Table User")
+    void createTableTest() {
         userDao.createTable();
-        boolean tableExists = userDao.checkIfTableExists("users");
-        assertTrue(tableExists);
+        boolean creatTrue = userDao.checkIfTableExists("users");
+        assertTrue(creatTrue);
+        boolean noCreat = userDao.checkIfTableExists("pusers");
+        assertFalse(noCreat);
+    }
 
+    @Test
+    @DisplayName("Test getUser")
+    void getUserTest() {
+        int userId = userDao.getAll().get(4).getId();
+        assertEquals(5, userId);
+        assertEquals("eminem", userDao.get(5).getUserName());
+        assertNull(userDao.get(8));
+    }
+
+    @Test
+    @DisplayName("Test update User")
+    void updateUserTest() {
+        int userId = userDao.getAll().get(3).getId();
         User user = User.builder()
-                .userName("Jaccoco")
-                .firstName("Boyko")
-                .lastName("Dima")
-                .passport(72698521)
-                .bankCard(1234_4569_9874_1236L)
+                .userName("Jace")
+                .lastName("Galcin")
+                .firstName("Gena")
+                .passport(56987415)
+                .email("gavril@mail.ru")
+                .bankCard(32569874125463L)
                 .build();
+        assertEquals("gav@mail.ru", userDao.get(userId).getEmail());
+        userDao.update(userId, user);
+        assertEquals("gavril@mail.ru", userDao.get(userId).getEmail());
+        assertNull(userDao.update(9, user));
+    }
 
-        User savedUser = userDao.save(user);
-        assertNotNull(savedUser);
-        assertEquals("Jaccoco", savedUser.getUserName());
-
-        Integer savedUserId = savedUser.getId();
-        System.out.println(savedUserId);
-        System.out.println(savedUser);
-        assertEquals(userDao.get(savedUserId), savedUser, "что то не так c тестом get");
-
-        User user2 = User.builder()
-                .userName("Jaccoco")
-                .firstName("Boyko")
-                .lastName("Dima")
-                .passport(72698521)
-                .email("jaccoco@gmail.com")
-                .bankCard(1234_4569_9874_1236L)
+    @Test
+    @DisplayName("Test save and delete")
+    void saveTest() {
+        User user = User.builder()
+                .userName("vandervud")
+                .lastName("Tom")
+                .firstName("Hardi")
+                .passport(85234789)
+                .email("hardi@mail.ru")
+                .bankCard(258963214785L)
                 .build();
+        User newUser = userDao.save(user);
+        assertNotNull(newUser);
+        assertEquals(6, userDao.getAll().size());
+        assertEquals("vandervud", userDao.getAll().get(5).getUserName());
+        int idUser = userDao.getAll().get(5).getId();
 
-        userDao.update(user.getId(), user2);
-        assertEquals("jaccoco@gmail.com", userDao.get(savedUserId).getEmail());
+        assertAll(
+                () -> assertEquals(6, idUser),
+                () ->  assertTrue(userDao.delete(idUser)),
+                () -> assertFalse(userDao.delete(9)),
+                () -> assertEquals(5, userDao.getAll().size()),
+                () -> assertFalse(userDao.getAll().stream().anyMatch(u -> u.getUserName().equals("vandervud")))
+        );
+    }
 
-        assertNotNull(user, "юзер должен быть");
-        userDao.delete(user.getId());
-        assertNull(userDao.get(user.getId()), "юзер должен быть удален");
-
-        List<User> bd = userDao.getAllUsers();
-        bd.forEach(System.out::println);
-        assertNotNull(bd);
-
-        //      userDao.deleteAllUsers();
-        List<User> bd2 = userDao.getAllUsers();
-        assertFalse(bd2.isEmpty());
-
-        User user3 = User.builder()
-                .userName("Jaccoco")
-                .firstName("Boyko")
-                .lastName("Dima")
-                .passport(72698521)
-                .email("jaccoco@gmail.com")
-                .bankCard(1234_4569_9874_1236L)
-                .build();
-
-        User user4 = User.builder()
-                .userName("Maven")
-                .firstName("Man")
-                .lastName("Boy")
-                .passport(1236547)
-                .email("jaccoco@gmail.com")
-                .bankCard(9874_1236_1234_4569L)
-                .build();
-
-        userDao.save(user3);
-        userDao.save(user4);
-
-        Predicate<User> lastNamePredicate = boy -> boy.getLastName().contains("Boy");
-
-        List<User> filteredUsers = userDao.filterBy(lastNamePredicate);
-
-        //       assertEquals(1, filteredUsers.size(), "Должен быть найден только один пользователь с фамилией 'Boy'");
-        assertEquals("Boy", filteredUsers.get(0).getLastName(), "Фамилия должна быть 'Boy'");
-
-        filteredUsers.forEach(System.out::println);
+    @Test
+    @DisplayName("Test filtrUser")
+    void filtrUserTest() {
+        Predicate<User> predicate = c -> c.getUserName().contains("jerry");
+        List<User> filteredUser = userDao.filterBy(predicate);
+        assertEquals("jerry", filteredUser.get(0).getUserName(), "name должен быть 'jerry'");
+        filteredUser.forEach(System.out::println);
     }
 }

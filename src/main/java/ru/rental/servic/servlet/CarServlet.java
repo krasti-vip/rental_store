@@ -5,27 +5,26 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import ru.rental.servic.dto.CarDto;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import ru.rental.servic.service.CarService;
 
 import java.io.IOException;
 
 @WebServlet("/car")
+@Component
 public class CarServlet extends HttpServlet {
 
-    private final CarService carService = new CarService();
+    private final CarService carService;
+
+    @Autowired
+    public CarServlet(CarService carService) {
+        this.carService = carService;
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        final var allCarDto = carService.getAll();
-
-        resp.setContentType("text/html; charset=UTF-8");
-        final var writer = resp.getWriter();
-
-        for (CarDto carDto : allCarDto) {
-            writer.write(carDto.getTitle() + " ");
-        }
-
-        writer.close();
+        req.setAttribute("allcar", carService.getAll());
+        req.getRequestDispatcher("/WEB-INF/jsp/car.jsp").forward(req, resp);
     }
 }

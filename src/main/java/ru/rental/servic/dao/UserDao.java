@@ -1,9 +1,9 @@
 package ru.rental.servic.dao;
 
+import org.springframework.stereotype.Component;
 import ru.rental.servic.model.User;
-import ru.rental.servic.util.PropertiesUtil;
+import ru.rental.servic.util.ConnectionManager;
 
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 
+@Component
 public class UserDao implements DAO<User, Integer> {
 
     private static final String SELECT_USER = """
@@ -52,11 +53,14 @@ public class UserDao implements DAO<User, Integer> {
     private static final String SELECT_ALL_USERS =
             "SELECT id, user_name, first_name, last_name, passport, email, bank_card FROM users";
 
-    private static final String BD_URL = "db.url";
-    private static final String BD_USERNAME = "db.username";
-    private static final String BD_PASSWORD = "db.password";
-
-    public static boolean checkIfTableExists(String tableName) {
+    /**
+     * Метод проверяет по переданному названию таблицы, ее существование, вернет или True, или False
+     *
+     * @param tableName
+     * @return
+     */
+    @Override
+    public boolean checkIfTableExists(String tableName) {
         String query = """
                 SELECT EXISTS (
                     SELECT FROM information_schema.tables 
@@ -64,10 +68,7 @@ public class UserDao implements DAO<User, Integer> {
                 )
                 """;
 
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(query)) {
 
             preparedStatement.setString(1, tableName.toLowerCase());
@@ -84,13 +85,15 @@ public class UserDao implements DAO<User, Integer> {
         return false;
     }
 
+    /**
+     * Метод создания таблицы в базе данных,
+     * проверка на уникальность таблицы отсутствует, возможно дублирование, если по какой-то причине таблица не будет
+     * создана выкинет Exception IllegalStateException("Ошибка создания таблицы", e);
+     */
     @Override
     public void createTable() {
 
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(CREATE_TABLE)) {
 
             preparedStatement.execute();
@@ -100,12 +103,20 @@ public class UserDao implements DAO<User, Integer> {
         }
     }
 
+    /**
+     * Метод возвращает объект по его id, присутствует проверка на null переданного id, в этом
+     * случае бросит ошибку IllegalArgumentException("ID obj не может быть null"), если id существует, но
+     * метод не смог вернуть его то бросит ошибку IllegalStateException("Ошибка передачи obj", e);
+     *
+     * @param id
+     * @return
+     */
     @Override
     public User get(Integer id) {
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        if (id == null) {
+            throw new IllegalArgumentException("ID пользователя не может быть null");
+        }
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(SELECT_USER)) {
 
             preparedStatement.setInt(1, id);
@@ -124,19 +135,23 @@ public class UserDao implements DAO<User, Integer> {
             } else {
                 return null;
             }
-
-
         } catch (SQLException e) {
             throw new IllegalStateException("Ошибка передачи пользователя", e);
         }
     }
 
+    /**
+     * Метод обновляет объект по переданному id и новому объекту для обновления, отсутствует проверка
+     * на null (могут быть проблемы), если обновление по другим причинам не произошло,
+     * бросит exception IllegalStateException("Ошибка обновления obj", e);
+     *
+     * @param id
+     * @param obj
+     * @return
+     */
     @Override
     public User update(Integer id, User obj) {
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(UPDATE_USER)) {
 
             preparedStatement.setString(1, obj.getUserName());
@@ -159,12 +174,16 @@ public class UserDao implements DAO<User, Integer> {
         }
     }
 
+    /**
+     * Метод сохраняет новый переданный объект, отсутствует проверка на null (осторожней),
+     * если по другой причине не сохранится obj, кинет исключение IllegalStateException("Ошибка сохранения obj", e);
+     *
+     * @param obj
+     * @return
+     */
     @Override
     public User save(User obj) {
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(INSERT_USER, Statement.RETURN_GENERATED_KEYS)) {
 
             preparedStatement.setString(1, obj.getUserName());
@@ -195,12 +214,16 @@ public class UserDao implements DAO<User, Integer> {
         }
     }
 
+    /**
+     * Метод удаляет объект по переданному id, отсутствует проверка на null (осторожней),
+     * в другом случае если удаление не удалось, кинет исключение IllegalStateException("Ошибка удаления obj", e);
+     *
+     * @param id
+     * @return
+     */
     @Override
     public boolean delete(Integer id) {
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(DELETE_USER)) {
 
             preparedStatement.setInt(1, id);
@@ -214,13 +237,16 @@ public class UserDao implements DAO<User, Integer> {
         }
     }
 
-    public List<User> getAllUsers() {
+    /**
+     * Метод возвращающий все объекты класса которые хранятся в базе данных, если передача не удалась,
+     * кинет ошибку IllegalStateException("Ошибка передачи всех obj", e);
+     *
+     * @return
+     */
+    public List<User> getAll() {
         List<User> users = new ArrayList<>();
 
-        try (final var connection = DriverManager.getConnection(
-                PropertiesUtil.getProperties(BD_URL),
-                PropertiesUtil.getProperties(BD_USERNAME),
-                PropertiesUtil.getProperties(BD_PASSWORD));
+        try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(SELECT_ALL_USERS);
              final var resultSet = preparedStatement.executeQuery()) {
 
@@ -244,21 +270,16 @@ public class UserDao implements DAO<User, Integer> {
         return users;
     }
 
-//    public void deleteAllUsers() {
-//        try (final var connection = DriverManager.getConnection(
-//                PropertiesUtil.getProperties(BD_URL),
-//                PropertiesUtil.getProperties(BD_USERNAME),
-//                PropertiesUtil.getProperties(BD_PASSWORD));
-//             final var preparedStatement = connection.prepareStatement("DELETE FROM users")) {
-//            preparedStatement.executeUpdate();
-//        } catch (SQLException e) {
-//            throw new IllegalStateException("Ошибка удаления всех юзеров", e);
-//        }
-//    }
-
+    /**
+     * Метод осуществляет фильтрацию всех объектов находящихся в базе данных по переданному предикату и возвращает лист
+     * с объектами удовлетворяющими критерии фильтрации, отсутствует проверка на null
+     *
+     * @param predicate
+     * @return
+     */
     @Override
     public List<User> filterBy(Predicate<User> predicate) {
-        List<User> allUsers = getAllUsers();
+        List<User> allUsers = getAll();
         return allUsers.stream()
                 .filter(predicate)
                 .toList();
