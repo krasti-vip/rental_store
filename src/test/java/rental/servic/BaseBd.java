@@ -1,7 +1,7 @@
 package rental.servic;
 
 import org.junit.jupiter.api.BeforeEach;
-import ru.rental.servic.util.ConnectionManager;
+import ru.rental.service.util.ConnectionManager;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -12,7 +12,7 @@ import java.sql.SQLException;
 public class BaseBd {
 
     @BeforeEach
-    public void initBike() {
+    public void initBd() {
         final var path = BikeDaoTest.class.getClassLoader().getResource("initBd.sql").getPath();
         try (final var connection = ConnectionManager.getConnection();
              final var bufferedReader = new BufferedReader(new FileReader(path))) {

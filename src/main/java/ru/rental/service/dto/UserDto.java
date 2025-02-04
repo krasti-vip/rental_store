@@ -1,15 +1,19 @@
-package ru.rental.servic.model;
+package ru.rental.service.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import ru.rental.service.model.Bike;
+import ru.rental.service.model.Car;
+
+import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
 @Builder
-public class User {
+public class UserDto {
 
     private int id;
 
@@ -25,5 +29,7 @@ public class User {
 
     private long bankCard;
 
-    // два листа с кар и байк куда будем складывать все что он арендует
+    private List<Bike> listBike;
+
+    private List<Car> listCar;
 }

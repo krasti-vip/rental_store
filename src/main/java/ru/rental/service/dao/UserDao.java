@@ -1,9 +1,12 @@
-package ru.rental.servic.dao;
+package ru.rental.service.dao;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import ru.rental.servic.model.User;
-import ru.rental.servic.util.ConnectionManager;
-
+import ru.rental.service.model.Bike;
+import ru.rental.service.model.Car;
+import ru.rental.service.model.User;
+import ru.rental.service.util.ConnectionManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -13,6 +16,12 @@ import java.util.function.Predicate;
 
 @Component
 public class UserDao implements DAO<User, Integer> {
+
+    private static final Logger log = LoggerFactory.getLogger(UserDao.class);
+
+    private static final String NO_USER_FOUND = "User with id {} not found";
+
+    private static final String USER_FOUND = "Users loaded: {}";
 
     private static final String SELECT_USER = """
             SELECT id, user_name, first_name, last_name, passport, email, bank_card FROM users WHERE id = ?
@@ -75,13 +84,14 @@ public class UserDao implements DAO<User, Integer> {
             ResultSet resultSet = preparedStatement.executeQuery();
 
             if (resultSet.next()) {
+                log.info("Table exists: {}", tableName);
                 return resultSet.getBoolean(1);
             }
 
         } catch (SQLException e) {
             throw new IllegalStateException("Ошибка существования таблицы", e);
         }
-
+        log.warn("Table no exists: {}", tableName);
         return false;
     }
 
@@ -114,6 +124,7 @@ public class UserDao implements DAO<User, Integer> {
     @Override
     public User get(Integer id) {
         if (id == null) {
+            log.warn("id is null");
             throw new IllegalArgumentException("ID пользователя не может быть null");
         }
         try (final var connection = ConnectionManager.getConnection();
@@ -123,6 +134,7 @@ public class UserDao implements DAO<User, Integer> {
             final var resultSet = preparedStatement.executeQuery();
 
             if (resultSet.next()) {
+                log.info("User: найден");
                 return User.builder()
                         .id(resultSet.getInt("id"))
                         .firstName(resultSet.getString("first_name"))
@@ -131,8 +143,11 @@ public class UserDao implements DAO<User, Integer> {
                         .passport(resultSet.getInt("passport"))
                         .email(resultSet.getString("email"))
                         .bankCard(resultSet.getLong("bank_card"))
+                        .listBike(getUserBikes(id))
+                        .listCar(getUserCars(id))
                         .build();
             } else {
+                log.warn(NO_USER_FOUND, id);
                 return null;
             }
         } catch (SQLException e) {
@@ -151,23 +166,37 @@ public class UserDao implements DAO<User, Integer> {
      */
     @Override
     public User update(Integer id, User obj) {
-        try (final var connection = ConnectionManager.getConnection();
-             final var preparedStatement = connection.prepareStatement(UPDATE_USER)) {
+        try (final var connection = ConnectionManager.getConnection()) {
 
-            preparedStatement.setString(1, obj.getUserName());
-            preparedStatement.setString(2, obj.getFirstName());
-            preparedStatement.setString(3, obj.getLastName());
-            preparedStatement.setInt(4, obj.getPassport());
-            preparedStatement.setString(5, obj.getEmail());
-            preparedStatement.setLong(6, obj.getBankCard());
-            preparedStatement.setInt(7, id);
+            String checkQuery = "SELECT 1 FROM users WHERE id = ?";
+            try (final var checkStmt = connection.prepareStatement(checkQuery)) {
+                checkStmt.setInt(1, id);
+                try (final var rs = checkStmt.executeQuery()) {
+                    if (!rs.next()) {
+                        log.warn(NO_USER_FOUND, id);
+                        throw new IllegalStateException("Car with id " + id + " does not exist");
+                    }
+                }
+            }
+            try (final var preparedStatement = connection.prepareStatement(UPDATE_USER)) {
 
-            int rowsAffected = preparedStatement.executeUpdate();
+                preparedStatement.setString(1, obj.getUserName());
+                preparedStatement.setString(2, obj.getFirstName());
+                preparedStatement.setString(3, obj.getLastName());
+                preparedStatement.setInt(4, obj.getPassport());
+                preparedStatement.setString(5, obj.getEmail());
+                preparedStatement.setLong(6, obj.getBankCard());
+                preparedStatement.setInt(7, id);
 
-            if (rowsAffected > 0) {
-                return obj;
-            } else {
-                return null;
+                int rowsAffected = preparedStatement.executeUpdate();
+
+                if (rowsAffected > 0) {
+                    log.info("User with id {} updated", id);
+                    return obj;
+                } else {
+                    log.warn(NO_USER_FOUND, id);
+                    return null;
+                }
             }
         } catch (SQLException e) {
             throw new IllegalStateException("Ошибка обновления пользователя", e);
@@ -175,7 +204,7 @@ public class UserDao implements DAO<User, Integer> {
     }
 
     /**
-     * Метод сохраняет новый переданный объект, отсутствует проверка на null (осторожней),
+     * Метод сохраняет новый переданный объект, добавлена проверка на null,
      * если по другой причине не сохранится obj, кинет исключение IllegalStateException("Ошибка сохранения obj", e);
      *
      * @param obj
@@ -183,6 +212,10 @@ public class UserDao implements DAO<User, Integer> {
      */
     @Override
     public User save(User obj) {
+        if (obj == null) {
+            log.warn("User object is null");
+            throw new IllegalArgumentException("Пользователь не может быть null");
+        }
         try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(INSERT_USER, Statement.RETURN_GENERATED_KEYS)) {
 
@@ -202,11 +235,12 @@ public class UserDao implements DAO<User, Integer> {
                         int generatedId = generatedKeys.getInt(1);
 
                         obj.setId(generatedId);
+                        log.info("User with id {} save", obj.getId());
                         return obj;
                     }
                 }
             }
-
+            log.warn(NO_USER_FOUND, obj.getId());
             return null;
 
         } catch (SQLException e) {
@@ -215,7 +249,7 @@ public class UserDao implements DAO<User, Integer> {
     }
 
     /**
-     * Метод удаляет объект по переданному id, отсутствует проверка на null (осторожней),
+     * Метод удаляет объект по переданному id, добавлена проверка на null,
      * в другом случае если удаление не удалось, кинет исключение IllegalStateException("Ошибка удаления obj", e);
      *
      * @param id
@@ -223,13 +257,17 @@ public class UserDao implements DAO<User, Integer> {
      */
     @Override
     public boolean delete(Integer id) {
+        if (id == null) {
+            log.warn("id is null");
+            throw new IllegalArgumentException("Id не может быть null");
+        }
         try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(DELETE_USER)) {
 
             preparedStatement.setInt(1, id);
 
             int rowsAffected = preparedStatement.executeUpdate();
-
+            log.info("User with id {} deleted", id);
             return rowsAffected > 0;
 
         } catch (SQLException e) {
@@ -260,13 +298,14 @@ public class UserDao implements DAO<User, Integer> {
                         .email(resultSet.getString("email"))
                         .bankCard(resultSet.getLong("bank_card"))
                         .build();
+                log.info("User with id {} loaded", user.getId());
                 users.add(user);
             }
 
         } catch (SQLException e) {
             throw new IllegalStateException("Ошибка передачи всех пользователей", e);
         }
-
+        log.info(USER_FOUND, users);
         return users;
     }
 
@@ -280,8 +319,64 @@ public class UserDao implements DAO<User, Integer> {
     @Override
     public List<User> filterBy(Predicate<User> predicate) {
         List<User> allUsers = getAll();
+        log.info(USER_FOUND, allUsers);
         return allUsers.stream()
                 .filter(predicate)
                 .toList();
+    }
+
+    private List<Bike> getUserBikes(int userId) {
+        List<Bike> bikes = new ArrayList<>();
+        String query = "SELECT id, name, price, horse_power, volume, user_id FROM bikes WHERE user_id = ?";
+
+        try (var connection = ConnectionManager.getConnection();
+             var preparedStatement = connection.prepareStatement(query)) {
+
+            preparedStatement.setInt(1, userId);
+            var resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                bikes.add(Bike.builder()
+                        .id(resultSet.getInt("id"))
+                        .name(resultSet.getString("name"))
+                        .price(resultSet.getDouble("price"))
+                        .horsePower(resultSet.getInt("horse_power"))
+                        .volume(resultSet.getDouble("volume"))
+                        .userId(userId)
+                        .build());
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Ошибка при загрузке байков", e);
+        }
+        log.info(USER_FOUND, bikes);
+        return bikes;
+    }
+
+    private List<Car> getUserCars(int userId) {
+        List<Car> cars = new ArrayList<>();
+        String query = "SELECT id, title, price, horse_power, volume, color, user_id FROM cars WHERE user_id = ?";
+
+        try (var connection = ConnectionManager.getConnection();
+             var preparedStatement = connection.prepareStatement(query)) {
+
+            preparedStatement.setInt(1, userId);
+            var resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                cars.add(Car.builder()
+                        .id(resultSet.getInt("id"))
+                        .title(resultSet.getString("title"))
+                        .price(resultSet.getDouble("price"))
+                        .horsePower(resultSet.getInt("horse_power"))
+                        .volume(resultSet.getDouble("volume"))
+                        .color(resultSet.getString("color"))
+                        .userId(userId)
+                        .build());
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Ошибка при загрузке машин", e);
+        }
+        log.info(USER_FOUND, cars);
+        return cars;
     }
 }

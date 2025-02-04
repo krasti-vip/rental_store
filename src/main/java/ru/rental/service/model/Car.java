@@ -1,5 +1,4 @@
-package ru.rental.servic.model;
-
+package ru.rental.service.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,15 +9,19 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 @Builder
-public class Bike {
+public class Car {
 
     private int id;
 
-    private String name;
+    private String title;
 
     private double price;
 
     private int horsePower;
 
     private double volume;
+
+    private String color;
+
+    private Integer userId;
 }

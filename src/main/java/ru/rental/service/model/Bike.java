@@ -1,4 +1,5 @@
-package ru.rental.servic.dto;
+package ru.rental.service.model;
+
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,11 +10,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 @Builder
-public class CarDto {
+public class Bike {
 
     private int id;
 
-    private String title;
+    private String name;
 
     private double price;
 
@@ -21,5 +22,5 @@ public class CarDto {
 
     private double volume;
 
-    private String color;
+    private Integer userId;
 }

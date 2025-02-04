@@ -1,4 +1,4 @@
-package ru.rental.servic.dao;
+package ru.rental.service.dao;
 
 import java.util.List;
 import java.util.function.Predicate;
@@ -16,6 +16,7 @@ public interface DAO<T, I> {
      * Метод возвращает объект User, Bike, Car по его id, присутствует проверка на null переданного id, в этом
      * случае бросит ошибку IllegalArgumentException("ID obj не может быть null"), если id существует, но
      * метод не смог вернуть его то бросит ошибку IllegalStateException("Ошибка передачи obj", e);
+     *
      * @param id
      * @return
      */
@@ -25,6 +26,7 @@ public interface DAO<T, I> {
      * Метод обновляет объект User, Bike, Car по переданному id и новому объекту для обновления, отсутствует проверка
      * на null для id или переданному объекту (могут быть проблемы), если обновление по другим причинам не произошло,
      * бросит exception IllegalStateException("Ошибка обновления obj", e);
+     *
      * @param id
      * @param obj
      * @return
@@ -34,6 +36,7 @@ public interface DAO<T, I> {
     /**
      * Метод сохраняет новый переданный объект User, Bike, Car, отсутствует проверка на null (осторожней),
      * если по другой причине не сохранится obj, кинет исключение IllegalStateException("Ошибка сохранения obj", e);
+     *
      * @param obj
      * @return
      */
@@ -42,6 +45,7 @@ public interface DAO<T, I> {
     /**
      * Метод удаляет объект User, Bike, Car по переданному id, отсутствует проверка на null (осторожней),
      * в другом случае если удаление не удалось, кинет исключение IllegalStateException("Ошибка удаления obj", e);
+     *
      * @param id
      * @return
      */
@@ -50,6 +54,7 @@ public interface DAO<T, I> {
     /**
      * Метод осуществляет фильтрацию всех объектов находящихся в базе данных по переданному предикату и возвращает лист
      * с объектами удовлетворяющими критерии фильтрации, отсутствует проверка на null
+     *
      * @param predicate
      * @return
      */
@@ -65,6 +70,7 @@ public interface DAO<T, I> {
 
     /**
      * Метод проверяет по переданному названию таблицы, ее существование, вернет или True, или False
+     *
      * @param tableName
      * @return
      */
