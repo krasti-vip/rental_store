@@ -37,6 +37,8 @@ class UserServiceTest extends BaseBd {
                 .lastName("Vas")
                 .passport(72621)
                 .bankCard(9876_4569_9874_1236L)
+                .listBike(List.of())
+                .listCar(List.of())
                 .build();
         userService.update(userId, userTest2);
         assertEquals("Jac", userService.get(userId).get().getUserName());
@@ -52,6 +54,7 @@ class UserServiceTest extends BaseBd {
                 .passport(85234789)
                 .email("hardi@mail.ru")
                 .bankCard(258963214785L)
+
                 .build();
 
         int userDtoId = userService.save(userDto).getId();

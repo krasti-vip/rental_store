@@ -3,8 +3,10 @@ package rental.servic;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import ru.rental.servic.dao.BikeDao;
+import ru.rental.servic.dao.UserDao;
 import ru.rental.servic.dto.BikeDto;
 import ru.rental.servic.service.BikeService;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -12,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class BikeServiceTest extends BaseBd {
 
-    private final BikeService bikeService = new BikeService(new BikeDao());
+    private final BikeService bikeService = new BikeService(new BikeDao(new UserDao()));
 
     @Test
     @DisplayName("Test get")
@@ -77,4 +79,46 @@ class BikeServiceTest extends BaseBd {
         assertTrue(bikeFilter.size() > 0);
         assertEquals("SUZUKI", bikeFilter.get(0).getName());
     }
+
+//    @Test
+//    @DisplayName("Test getAllByUserId")
+//    void getAllByUserIdTest() {
+//        // Создаем тестовые данные
+//        Integer userId = 2; // предполагаем, что у пользователя с id = 2 есть байки
+//        List<BikeDto> bikes = bikeService.getAllByUserId(userId);
+//
+//        // Проверка, что байки для пользователя с таким id были получены
+//        assertNotNull(bikes, "Список байков не должен быть null");
+//        assertTrue(bikes.size() > 0, "Должно быть больше одного байка для пользователя с id " + userId);
+//
+//        // Тест с неверным id, для которого нет байков
+//        Integer invalidUserId = 999;
+//        List<BikeDto> emptyBikes = bikeService.getAllByUserId(invalidUserId);
+//
+//        // Проверка, что список пуст, если у пользователя нет байков
+//        assertNotNull(emptyBikes, "Список байков не должен быть null");
+//        assertTrue(emptyBikes.isEmpty(), "Список байков должен быть пустым для пользователя с id " + invalidUserId);
+//    }
+//
+//    @Test
+//    @DisplayName("Test updateUserId")
+//    void updateUserIdTest() {
+//        // Создаем тестовые данные
+//        Integer bikeId = bikeService.getAll().get(0).getId();  // Получаем существующий байк
+//        Integer userId = 3;  // id пользователя, с которым нужно связать байк
+//
+//        // Обновляем userId для байка
+//        Optional<BikeDto> updatedBike = bikeService.updateUserId(bikeId, userId);
+//
+//        // Проверяем, что обновление прошло успешно
+//        assertTrue(updatedBike.isPresent(), "Байк с id " + bikeId + " должен быть успешно обновлен с userId " + userId);
+//        assertEquals(userId, updatedBike.get().getUserId(), "userId должен быть обновлен");
+//
+//        // Пробуем обновить несуществующий байк
+//        Integer invalidBikeId = 9999;  // Несуществующий id байка
+//        Optional<BikeDto> invalidUpdate = bikeService.updateUserId(invalidBikeId, userId);
+//
+//        // Проверяем, что обновление не произошло для несуществующего байка
+//        assertFalse(invalidUpdate.isPresent(), "Байк с id " + invalidBikeId + " не существует, обновление должно вернуть пустой Optional");
+//    }
 }

@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
@@ -25,5 +27,7 @@ public class User {
 
     private long bankCard;
 
-    // два листа с кар и байк куда будем складывать все что он арендует
+    private List<Bike> listBike;
+
+    private List<Car> listCar;
 }

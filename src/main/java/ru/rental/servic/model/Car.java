@@ -22,4 +22,6 @@ public class Car {
     private double volume;
 
     private String color;
+
+    private Integer userId;
 }
