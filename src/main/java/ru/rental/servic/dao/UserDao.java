@@ -151,23 +151,34 @@ public class UserDao implements DAO<User, Integer> {
      */
     @Override
     public User update(Integer id, User obj) {
-        try (final var connection = ConnectionManager.getConnection();
-             final var preparedStatement = connection.prepareStatement(UPDATE_USER)) {
+        try (final var connection = ConnectionManager.getConnection()) {
 
-            preparedStatement.setString(1, obj.getUserName());
-            preparedStatement.setString(2, obj.getFirstName());
-            preparedStatement.setString(3, obj.getLastName());
-            preparedStatement.setInt(4, obj.getPassport());
-            preparedStatement.setString(5, obj.getEmail());
-            preparedStatement.setLong(6, obj.getBankCard());
-            preparedStatement.setInt(7, id);
+            String checkQuery = "SELECT 1 FROM cars WHERE id = ?";
+            try (final var checkStmt = connection.prepareStatement(checkQuery)) {
+                checkStmt.setInt(1, id);
+                try (final var rs = checkStmt.executeQuery()) {
+                    if (!rs.next()) {
+                        throw new IllegalStateException("Car with id " + id + " does not exist");
+                    }
+                }
+            }
+            try (final var preparedStatement = connection.prepareStatement(UPDATE_USER)) {
 
-            int rowsAffected = preparedStatement.executeUpdate();
+                preparedStatement.setString(1, obj.getUserName());
+                preparedStatement.setString(2, obj.getFirstName());
+                preparedStatement.setString(3, obj.getLastName());
+                preparedStatement.setInt(4, obj.getPassport());
+                preparedStatement.setString(5, obj.getEmail());
+                preparedStatement.setLong(6, obj.getBankCard());
+                preparedStatement.setInt(7, id);
 
-            if (rowsAffected > 0) {
-                return obj;
-            } else {
-                return null;
+                int rowsAffected = preparedStatement.executeUpdate();
+
+                if (rowsAffected > 0) {
+                    return obj;
+                } else {
+                    return null;
+                }
             }
         } catch (SQLException e) {
             throw new IllegalStateException("Ошибка обновления пользователя", e);

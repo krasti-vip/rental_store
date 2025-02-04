@@ -6,6 +6,7 @@ import ru.rental.servic.dao.BikeDao;
 import ru.rental.servic.dto.BikeDto;
 import ru.rental.servic.model.Bike;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -88,6 +89,10 @@ public class BikeService implements Service<BikeDto, Integer> {
 
     @Override
     public List<BikeDto> getAll() {
+        if (bikeDao.getAll().isEmpty()) {
+            System.out.println("No Bikes");
+            return new ArrayList<>();
+        }
         return bikeDao.getAll().stream().map(this::convertByDto).toList();
     }
 

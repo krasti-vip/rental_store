@@ -3,6 +3,7 @@ package ru.rental.servic.dao;
 import org.springframework.stereotype.Component;
 import ru.rental.servic.model.Bike;
 import ru.rental.servic.util.ConnectionManager;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -135,8 +136,9 @@ public class BikeDao implements DAO<Bike, Integer> {
     }
 
     /**
-     * Метод обновляет объект по переданному id и новому объекту для обновления, отсутствует проверка
-     * на null (могут быть проблемы), если обновление по другим причинам не произошло,
+     * Метод обновляет объект по переданному id и новому объекту для обновления, есть проверка
+     * на null (через SQL запрос проверяем существует ли такой id если да, идем дальше если нет бросаем исключение),
+     * если обновление по другим причинам не произошло,
      * бросит exception IllegalStateException("Ошибка обновления obj", e);
      *
      * @param id
@@ -145,21 +147,32 @@ public class BikeDao implements DAO<Bike, Integer> {
      */
     @Override
     public Bike update(Integer id, Bike obj) {
-        try (final var connection = ConnectionManager.getConnection();
-             final var preparedStatement = connection.prepareStatement(UPDATE_BIKE)) {
+        try (final var connection = ConnectionManager.getConnection()) {
 
-            preparedStatement.setString(1, obj.getName());
-            preparedStatement.setDouble(2, obj.getPrice());
-            preparedStatement.setInt(3, obj.getHorsePower());
-            preparedStatement.setDouble(4, obj.getVolume());
-            preparedStatement.setInt(5, id);
+            String checkQuery = "SELECT 1 FROM bikes WHERE id = ?";
+            try (final var checkStmt = connection.prepareStatement(checkQuery)) {
+                checkStmt.setInt(1, id);
+                try (final var rs = checkStmt.executeQuery()) {
+                    if (!rs.next()) {
+                        throw new IllegalStateException("Bike with id " + id + " does not exist");
+                    }
+                }
+            }
+            try (final var preparedStatement = connection.prepareStatement(UPDATE_BIKE)) {
 
-            int rowsAffected = preparedStatement.executeUpdate();
+                preparedStatement.setString(1, obj.getName());
+                preparedStatement.setDouble(2, obj.getPrice());
+                preparedStatement.setInt(3, obj.getHorsePower());
+                preparedStatement.setDouble(4, obj.getVolume());
+                preparedStatement.setInt(5, id);
 
-            if (rowsAffected > 0) {
-                return obj;
-            } else {
-                return null;
+                int rowsAffected = preparedStatement.executeUpdate();
+
+                if (rowsAffected > 0) {
+                    return obj;
+                } else {
+                    return null;
+                }
             }
         } catch (SQLException e) {
             throw new IllegalStateException("Ошибка обновления байка", e);

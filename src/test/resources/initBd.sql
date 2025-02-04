@@ -30,16 +30,17 @@ CREATE TABLE IF NOT EXISTS cars
     price DOUBLE PRECISION NOT NULL,
     horse_power INT NOT NULL,
     volume DOUBLE PRECISION NOT NULL,
-    color VARCHAR(50) NOT NULL
+    color VARCHAR(50) NOT NULL,
+    user_id INT REFERENCES
     );
 
 --- Инициализация таблицы cars
-INSERT INTO cars (title, price, horse_power, volume, color)
-VALUES ('MERCEDES', 655.30, 250, 3.5, 'black'),
-       ('HONDA', 360.50, 190, 2.4, 'red'),
-       ('HYUNDAI', 320.90, 156, 2.0, 'white'),
-       ('BMW', 640.50, 450, 5.0, 'blue'),
-       ('OPEL', 210.90, 110, 1.8, 'gold');
+INSERT INTO cars (title, price, horse_power, volume, color, user_id)
+VALUES ('MERCEDES', 655.30, 250, 3.5, 'black', null),
+       ('HONDA', 360.50, 190, 2.4, 'red', null),
+       ('HYUNDAI', 320.90, 156, 2.0, 'white', null),
+       ('BMW', 640.50, 450, 5.0, 'blue', null),
+       ('OPEL', 210.90, 110, 1.8, 'gold', null);
 
 --- Удаление таблицы bikes
 DROP TABLE IF EXISTS users;
@@ -52,7 +53,7 @@ CREATE TABLE IF NOT EXISTS users
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50) NOT NULL,
     passport INT NOT NULL UNIQUE,
-    email VARCHAR(50) UNIQUE,
+    email VARCHAR(50),
     bank_card BIGINT NOT NULL
     );
 
