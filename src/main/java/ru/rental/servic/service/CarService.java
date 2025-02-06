@@ -16,7 +16,7 @@ public class CarService implements Service<CarDto, Integer> {
     private final CarDao carDao;
 
     @Autowired
-    public CarService(final CarDao carDao) {
+    public CarService(CarDao carDao) {
         this.carDao = carDao;
     }
 
@@ -102,5 +102,31 @@ public class CarService implements Service<CarDto, Integer> {
                 .volume(car.getVolume())
                 .color(car.getColor())
                 .build();
+    }
+
+    public Optional<CarDto> assignUserToCar(Integer carId, Integer userId) {
+        if (carId == null || userId == null) {
+            throw new IllegalArgumentException("ID машины или пользователя не могут быть null");
+        }
+
+        Car updatedCar = carDao.assignUserToCar(carId, userId);
+
+        if (updatedCar != null) {
+            return Optional.of(convertByDto(updatedCar));
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    public List<CarDto> getCarsByUser(Integer userId) {
+        if (userId == null) {
+            throw new IllegalArgumentException("ID пользователя не может быть null");
+        }
+
+        List<Car> cars = carDao.getCarsByUser(userId);
+
+        return cars.stream()
+                .map(this::convertByDto)
+                .toList();
     }
 }
