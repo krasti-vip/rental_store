@@ -1,13 +1,12 @@
 package ru.rental.servic;
 
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
+import org.postgresql.jdbc.PgClob;
+import org.springframework.context.annotation.*;
 import ru.rental.servic.config.RentalConfig;
-import ru.rental.servic.service.BikeService;
-import ru.rental.servic.service.CarService;
-import ru.rental.servic.service.UserService;
+import ru.rental.servic.model.Cat;
+import ru.rental.servic.model.Dog;
+
+import java.sql.SQLException;
 import java.util.Scanner;
 
 @Configuration
@@ -20,51 +19,83 @@ public class RentalServiceApp {
     public static void main(String[] args) {
 
         Scanner scanner = new Scanner(System.in);
-        ApplicationContext context = new AnnotationConfigApplicationContext(RentalServiceApp.class);
-        final var bikeService = context.getBean("bikeService", BikeService.class);
-        final var carService = context.getBean("carService", CarService.class);
-        final var userService = context.getBean("userService", UserService.class);
-        final var bikeApp = context.getBean(BikeApp.class);
-        final var userApp = context.getBean(UserApp.class);
-        final var carApp = context.getBean(CarApp.class);
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(RentalServiceApp.class);
 
-        System.out.println(ENTER);
+        context.close();
 
-        while (true) {
-            String password = scanner.nextLine();
-            if (password.equalsIgnoreCase("admin")) {
-                while (true) {
-                    System.out.println(MAIN_MENU);
-                    String scan = scanner.nextLine();
-                    if (scan.equalsIgnoreCase("1")) {
-                        userApp.carUser();
-                        System.out.println("Для получения списка авто user введите его id: ");
-                        int userId = scanner.nextInt();
-                        carService.getCarsByUser(userId).forEach(System.out::println);
-                        break;
+//        final var bikeService = context.getBean("bikeService", BikeService.class);
+//        final var carService = context.getBean("carService", CarService.class);
+//        final var userService = context.getBean("userService", UserService.class);
+//        final var bikeApp = context.getBean(BikeApp.class);
+//        final var userApp = context.getBean(UserApp.class);
+//        final var carApp = context.getBean(CarApp.class);
+//
+//        System.out.println(ENTER);
+//
+//        while (true) {
+//            String password = scanner.nextLine();
+//            if (password.equalsIgnoreCase("admin")) {
+//                while (true) {
+//                    System.out.println(MAIN_MENU);
+//                    String scan = scanner.nextLine();
+//                    if (scan.equalsIgnoreCase("1")) {
+//                        userApp.carUser();
+//                        System.out.println("Для получения списка авто user введите его id: ");
+//                        int userId = scanner.nextInt();
+//                        carService.getCarsByUser(userId).forEach(System.out::println);
+//                        break;
+//
+//                    } else if (scan.equalsIgnoreCase("2")) {
+//                        bikeApp.crudBike();
+//
+//                    } else if (scan.equalsIgnoreCase("3")) {
+//                        carApp.crudCar();
+//
+//                    } else if (scan.equalsIgnoreCase("4")) {
+//                        userApp.crudUser();
+//
+//                    } else if (scan.equalsIgnoreCase("5")) {
+//                        break;
+//                    }
+//                }
+//
+//            } else if (password.equalsIgnoreCase("exit")) {
+//                break;
+//
+//            } else {
+//                System.out.println("Неверный пароль");
+//
+//            }
+//        }
+    }
 
-                    } else if (scan.equalsIgnoreCase("2")) {
-                        bikeApp.crudBike();
+    @Bean(initMethod = "say", destroyMethod = "say2")
+    @Scope(value = "prototype")
+//    @Primary
+    public Cat createCat() {
+        final var cat = new Cat();
+        return cat;
+    }
 
-                    } else if (scan.equalsIgnoreCase("3")) {
-                        carApp.crudCar();
+    @Bean(initMethod = "say", destroyMethod = "say2", name = "evilCat")
+    @Scope(value = "prototype")
+    public Cat createCat2() {
+        System.out.println("Вызвался жесткий кот");
+        return new Cat();
+    }
 
-                    } else if (scan.equalsIgnoreCase("4")) {
-                        userApp.crudUser();
+    @Bean(initMethod = "say", destroyMethod = "say2")
+//    @Scope(value = "singleton")
+    public Dog createDog(Cat createCat) {
+        /**
+         *
+         */
+        return new Dog(createCat);
+    }
 
-                    } else if (scan.equalsIgnoreCase("5")) {
-                        break;
-                    }
-                }
-
-            } else if (password.equalsIgnoreCase("exit")) {
-                break;
-
-            } else {
-                System.out.println("Неверный пароль");
-
-            }
-        }
+    @Bean(name = "pgLob")
+    public PgClob createPgClob() throws SQLException {
+        return new PgClob(null, 1);
     }
 }
 

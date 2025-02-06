@@ -19,6 +19,81 @@ class UserDaoTest extends BaseBd {
 
     private static final UserDao USER_DAO = new UserDao();
 
+    private static Stream<Arguments> sourceUser() {
+        return Stream.of(
+                Arguments.of(
+                        User.builder()
+                                .id(1)
+                                .userName("bill")
+                                .firstName("Ivanov")
+                                .lastName("Dima")
+                                .passport(456987123)
+                                .email(null)
+                                .bankCard(7896541236547852L)
+                                .build()
+                ),
+                Arguments.of(
+                        User.builder()
+                                .id(2)
+                                .userName("tom")
+                                .firstName("Sidorov")
+                                .lastName("Pasha")
+                                .passport(98741236)
+                                .email(null)
+                                .bankCard(987456321458796L)
+                                .build()
+                ),
+                Arguments.of(
+                        User.builder()
+                                .id(3)
+                                .userName("jerry")
+                                .firstName("Petrov")
+                                .lastName("Sasha")
+                                .passport(12365478)
+                                .email(null)
+                                .bankCard(12589745321698L)
+                                .build()
+                ),
+                Arguments.of(
+                        User.builder()
+                                .id(4)
+                                .userName("ozi")
+                                .firstName("Galcin")
+                                .lastName("Gena")
+                                .passport(56987415)
+                                .email("gav@mail.ru")
+                                .bankCard(32569874125463L)
+                                .build()
+                ),
+                Arguments.of(
+                        User.builder()
+                                .id(5)
+                                .userName("eminem")
+                                .firstName("Pugachev")
+                                .lastName("Genya")
+                                .passport(85297418)
+                                .email(null)
+                                .bankCard(943655557412365L)
+                                .build()
+                )
+        );
+    }
+
+    private static Stream<Arguments> sourceUserForFilterTest() {
+        return Stream.of(
+                Arguments.of(new User(1, "bill", "Ivanov", "Dima", 456987123,
+                        null, 7896541236547852L), "bill", "bill"),
+                Arguments.of(new User(2, "tom", "Sidorov", "Pasha", 98741236, null,
+                        987456321458796L), "tom", "tom"),
+                Arguments.of(new User(3, "jerry", "Petrov", "Sasha", 12365478, null,
+                        12589745321698L), "jerry", "jerry"),
+                Arguments.of(new User(4, "ozi", "Galcin", "Gena", 56987415,
+                        "gav@mail.ru", 32569874125463L), "ozi", "ozi"),
+                Arguments.of(new User(5, "eminem", "Pugachev", "Genya", 85297418,
+                        null, 943655557412365L), "eminem", "eminem")
+        );
+    }
+
     @Test
     @DisplayName("Test getAllUser")
     void userDaoGetAll() {
@@ -149,81 +224,6 @@ class UserDaoTest extends BaseBd {
 
         assertTrue(filteredUsers.stream().anyMatch(b -> b.getUserName().equals(expectedName)),
                 "Отфильтрованный user должен быть " + expectedName);
-    }
-
-    private static Stream<Arguments> sourceUser() {
-        return Stream.of(
-                Arguments.of(
-                        User.builder()
-                                .id(1)
-                                .userName("bill")
-                                .firstName("Ivanov")
-                                .lastName("Dima")
-                                .passport(456987123)
-                                .email(null)
-                                .bankCard(7896541236547852L)
-                                .build()
-                ),
-                Arguments.of(
-                        User.builder()
-                                .id(2)
-                                .userName("tom")
-                                .firstName("Sidorov")
-                                .lastName("Pasha")
-                                .passport(98741236)
-                                .email(null)
-                                .bankCard(987456321458796L)
-                                .build()
-                ),
-                Arguments.of(
-                        User.builder()
-                                .id(3)
-                                .userName("jerry")
-                                .firstName("Petrov")
-                                .lastName("Sasha")
-                                .passport(12365478)
-                                .email(null)
-                                .bankCard(12589745321698L)
-                                .build()
-                ),
-                Arguments.of(
-                        User.builder()
-                                .id(4)
-                                .userName("ozi")
-                                .firstName("Galcin")
-                                .lastName("Gena")
-                                .passport(56987415)
-                                .email("gav@mail.ru")
-                                .bankCard(32569874125463L)
-                                .build()
-                ),
-                Arguments.of(
-                        User.builder()
-                                .id(5)
-                                .userName("eminem")
-                                .firstName("Pugachev")
-                                .lastName("Genya")
-                                .passport(85297418)
-                                .email(null)
-                                .bankCard(943655557412365L)
-                                .build()
-                )
-        );
-    }
-
-    private static Stream<Arguments> sourceUserForFilterTest() {
-        return Stream.of(
-                Arguments.of(new User(1, "bill", "Ivanov", "Dima", 456987123,
-                        null, 7896541236547852L), "bill", "bill"),
-                Arguments.of(new User(2, "tom", "Sidorov", "Pasha", 98741236, null,
-                        987456321458796L), "tom", "tom"),
-                Arguments.of(new User(3, "jerry", "Petrov", "Sasha", 12365478, null,
-                        12589745321698L), "jerry", "jerry"),
-                Arguments.of(new User(4, "ozi", "Galcin", "Gena", 56987415,
-                        "gav@mail.ru", 32569874125463L), "ozi", "ozi"),
-                Arguments.of(new User(5, "eminem", "Pugachev", "Genya", 85297418,
-                        null, 943655557412365L), "eminem", "eminem")
-        );
     }
 
     private int generateUniquePassport() {

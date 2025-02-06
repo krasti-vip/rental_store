@@ -1,0 +1,25 @@
+<configuration>
+    <!-- Определение правила для пользовательского класса -->
+    <conversionRule conversionWord="coloredLevel" converterClass="ru.rental.servic.util.LogbackColor"/>
+
+    <!-- Аппендер для вывода в консоль -->
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%coloredLevel(%d{yyyy-MM-dd HH:mm:ss} [%thread] %logger{36} - %msg%n)</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Аппендер для записи в файл -->
+    <appender name="file" class="ch.qos.logback.core.FileAppender">
+        <file>logs/rental.log</file>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Корневой логгер -->
+    <root level="info">
+        <appender-ref ref="console"/>
+        <appender-ref ref="file"/>
+    </root>
+</configuration>

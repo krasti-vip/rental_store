@@ -15,17 +15,15 @@ import java.util.Scanner;
 
 @Component
 public class UserApp {
+    private static final String CRUD = RentalConfig.getPropertyMenu("crud");
     private final Scanner scanner;
     private final UserService userService;
-
 
     @Autowired
     public UserApp(UserService userService) {
         this.userService = userService;
         this.scanner = new Scanner(System.in);
     }
-
-    private static final String CRUD = RentalConfig.getPropertyMenu("crud");
 
     public void crudUser() {
         while (true) {

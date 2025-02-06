@@ -7,6 +7,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import ru.rental.servic.dao.CarDao;
 import ru.rental.servic.model.Car;
+
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -16,6 +17,76 @@ import static org.junit.jupiter.api.Assertions.*;
 class CarDaoTest extends BaseBd {
 
     private static final CarDao CAR_DAO = new CarDao();
+
+    private static Stream<Arguments> sourceCar() {
+        return Stream.of(
+                Arguments.of(
+                        Car.builder()
+                                .id(1)
+                                .title("MERCEDES")
+                                .price(655.3)
+                                .horsePower(250)
+                                .volume(3.5)
+                                .color("black")
+                                .build()
+                ),
+                Arguments.of(
+                        Car.builder()
+                                .id(2)
+                                .title("HONDA")
+                                .price(360.5)
+                                .horsePower(190)
+                                .volume(2.4)
+                                .color("red")
+                                .build()
+                ),
+                Arguments.of(
+                        Car.builder()
+                                .id(3)
+                                .title("HYUNDAI")
+                                .price(320.9)
+                                .horsePower(156)
+                                .volume(2)
+                                .color("white")
+                                .build()
+                ),
+                Arguments.of(
+                        Car.builder()
+                                .id(4)
+                                .title("BMW")
+                                .price(640.5)
+                                .horsePower(450)
+                                .volume(5)
+                                .color("blue")
+                                .build()
+                ),
+                Arguments.of(
+                        Car.builder()
+                                .id(5)
+                                .title("OPEL")
+                                .price(210.9)
+                                .horsePower(110)
+                                .volume(1.8)
+                                .color("gold")
+                                .build()
+                )
+        );
+    }
+
+    private static Stream<Arguments> sourceCarForFilterTest() {
+        return Stream.of(
+                Arguments.of(new Car(1, "MERCEDES", 655.3, 250, 3.5, "black"
+                ), "MERCEDES", "MERCEDES"),
+                Arguments.of(new Car(2, "HONDA", 360.5, 190, 2.4, "red"
+                ), "HONDA", "HONDA"),
+                Arguments.of(new Car(3, "HYUNDAI", 320.9, 156, 2, "white"
+                ), "HYUNDAI", "HYUNDAI"),
+                Arguments.of(new Car(4, "BMW", 640.5, 450, 5, "blue"
+                ), "BMW", "BMW"),
+                Arguments.of(new Car(5, "OPEL", 210.9, 110, 1.8, "gold"
+                ), "OPEL", "OPEL")
+        );
+    }
 
     @Test
     @DisplayName("Test getAllCar")
@@ -138,75 +209,5 @@ class CarDaoTest extends BaseBd {
 
         assertTrue(filteredCars.stream().anyMatch(b -> b.getTitle().equals(expectedName)),
                 "Отфильтрованный car должен иметь модель " + expectedName);
-    }
-
-    private static Stream<Arguments> sourceCar() {
-        return Stream.of(
-                Arguments.of(
-                        Car.builder()
-                                .id(1)
-                                .title("MERCEDES")
-                                .price(655.3)
-                                .horsePower(250)
-                                .volume(3.5)
-                                .color("black")
-                                .build()
-                ),
-                Arguments.of(
-                        Car.builder()
-                                .id(2)
-                                .title("HONDA")
-                                .price(360.5)
-                                .horsePower(190)
-                                .volume(2.4)
-                                .color("red")
-                                .build()
-                ),
-                Arguments.of(
-                        Car.builder()
-                                .id(3)
-                                .title("HYUNDAI")
-                                .price(320.9)
-                                .horsePower(156)
-                                .volume(2)
-                                .color("white")
-                                .build()
-                ),
-                Arguments.of(
-                        Car.builder()
-                                .id(4)
-                                .title("BMW")
-                                .price(640.5)
-                                .horsePower(450)
-                                .volume(5)
-                                .color("blue")
-                                .build()
-                ),
-                Arguments.of(
-                        Car.builder()
-                                .id(5)
-                                .title("OPEL")
-                                .price(210.9)
-                                .horsePower(110)
-                                .volume(1.8)
-                                .color("gold")
-                                .build()
-                )
-        );
-    }
-
-    private static Stream<Arguments> sourceCarForFilterTest() {
-        return Stream.of(
-                Arguments.of(new Car(1, "MERCEDES", 655.3, 250, 3.5, "black"
-                ), "MERCEDES", "MERCEDES"),
-                Arguments.of(new Car(2, "HONDA", 360.5, 190, 2.4, "red"
-                ), "HONDA", "HONDA"),
-                Arguments.of(new Car(3, "HYUNDAI", 320.9, 156, 2, "white"
-                ), "HYUNDAI", "HYUNDAI"),
-                Arguments.of(new Car(4, "BMW", 640.5, 450, 5, "blue"
-                ), "BMW", "BMW"),
-                Arguments.of(new Car(5, "OPEL", 210.9, 110, 1.8, "gold"
-                ), "OPEL", "OPEL")
-        );
     }
 }

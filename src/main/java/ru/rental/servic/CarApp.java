@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 import ru.rental.servic.config.RentalConfig;
 import ru.rental.servic.dto.CarDto;
 import ru.rental.servic.service.CarService;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
@@ -12,6 +13,7 @@ import java.util.Scanner;
 @Component
 public class CarApp {
 
+    private static final String CRUD = RentalConfig.getPropertyMenu("crud");
     private final Scanner scanner;
     private final CarService carService;
 
@@ -20,8 +22,6 @@ public class CarApp {
         this.carService = carService;
         this.scanner = new Scanner(System.in);
     }
-
-    private static final String CRUD = RentalConfig.getPropertyMenu("crud");
 
     public void crudCar() {
         while (true) {

@@ -3,17 +3,80 @@ package rental.servic;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.*;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import ru.rental.servic.dao.BikeDao;
 import ru.rental.servic.model.Bike;
+
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class BikeDaoTest extends BaseBd {
 
     private static final BikeDao BIKE_DAO = new BikeDao();
+
+    private static Stream<Arguments> sourceBike() {
+        return Stream.of(
+                Arguments.of(
+                        Bike.builder()
+                                .id(1)
+                                .name("BMW")
+                                .price(2000)
+                                .horsePower(200)
+                                .volume(1.0)
+                                .build()
+                ),
+                Arguments.of(
+                        Bike.builder()
+                                .id(2)
+                                .name("SUZUKI")
+                                .price(30000)
+                                .horsePower(300)
+                                .volume(1.0)
+                                .build()
+                ),
+                Arguments.of(
+                        Bike.builder()
+                                .id(3)
+                                .name("YAMAHA")
+                                .price(40000)
+                                .horsePower(400)
+                                .volume(1.0)
+                                .build()
+                ),
+                Arguments.of(
+                        Bike.builder()
+                                .id(4)
+                                .name("URAL")
+                                .price(2000)
+                                .horsePower(200)
+                                .volume(1.0)
+                                .build()
+                ),
+                Arguments.of(
+                        Bike.builder()
+                                .id(5)
+                                .name("HONDA")
+                                .price(2000)
+                                .horsePower(200)
+                                .volume(1.0)
+                                .build()
+                )
+        );
+    }
+
+    private static Stream<Arguments> sourceBikeForFilterTest() {
+        return Stream.of(
+                Arguments.of(new Bike(1, "BMW", 2000, 200, 1.0), "URAL", "URAL"),
+                Arguments.of(new Bike(2, "SUZUKI", 30000, 300, 1.0), "BMW", "BMW"),
+                Arguments.of(new Bike(3, "YAMAHA", 40000, 400, 1.0), "YAMAHA", "YAMAHA"),
+                Arguments.of(new Bike(4, "URAL", 2000, 200, 1.0), "URAL", "URAL"),
+                Arguments.of(new Bike(5, "HONDA", 2000, 200, 1.0), "HONDA", "HONDA")
+        );
+    }
 
     @Test
     @DisplayName("Test getAllBike")
@@ -130,65 +193,5 @@ class BikeDaoTest extends BaseBd {
 
         assertTrue(filteredBikes.stream().anyMatch(b -> b.getName().equals(expectedName)),
                 "Отфильтрованный байк должен иметь модель " + expectedName);
-    }
-
-    private static Stream<Arguments> sourceBike() {
-        return Stream.of(
-                Arguments.of(
-                        Bike.builder()
-                                .id(1)
-                                .name("BMW")
-                                .price(2000)
-                                .horsePower(200)
-                                .volume(1.0)
-                                .build()
-                ),
-                Arguments.of(
-                        Bike.builder()
-                                .id(2)
-                                .name("SUZUKI")
-                                .price(30000)
-                                .horsePower(300)
-                                .volume(1.0)
-                                .build()
-                ),
-                Arguments.of(
-                        Bike.builder()
-                                .id(3)
-                                .name("YAMAHA")
-                                .price(40000)
-                                .horsePower(400)
-                                .volume(1.0)
-                                .build()
-                ),
-                Arguments.of(
-                        Bike.builder()
-                                .id(4)
-                                .name("URAL")
-                                .price(2000)
-                                .horsePower(200)
-                                .volume(1.0)
-                                .build()
-                ),
-                Arguments.of(
-                        Bike.builder()
-                                .id(5)
-                                .name("HONDA")
-                                .price(2000)
-                                .horsePower(200)
-                                .volume(1.0)
-                                .build()
-                )
-        );
-    }
-
-    private static Stream<Arguments> sourceBikeForFilterTest() {
-        return Stream.of(
-                Arguments.of(new Bike(1, "BMW", 2000, 200, 1.0), "URAL", "URAL"),
-                Arguments.of(new Bike(2, "SUZUKI", 30000, 300, 1.0), "BMW", "BMW"),
-                Arguments.of(new Bike(3, "YAMAHA", 40000, 400, 1.0), "YAMAHA", "YAMAHA"),
-                Arguments.of(new Bike(4, "URAL", 2000, 200, 1.0), "URAL", "URAL"),
-                Arguments.of(new Bike(5, "HONDA", 2000, 200, 1.0), "HONDA", "HONDA")
-        );
     }
 }

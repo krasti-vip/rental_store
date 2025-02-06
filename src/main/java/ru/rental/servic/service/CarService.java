@@ -5,10 +5,7 @@ import org.springframework.stereotype.Component;
 import ru.rental.servic.dao.CarDao;
 import ru.rental.servic.dto.CarDto;
 import ru.rental.servic.model.Car;
-import ru.rental.servic.util.ConnectionManager;
 
-import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;

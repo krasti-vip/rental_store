@@ -3,7 +3,6 @@ package ru.rental.servic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.rental.servic.config.RentalConfig;
-
 import ru.rental.servic.dto.BikeDto;
 import ru.rental.servic.service.BikeService;
 
@@ -13,6 +12,7 @@ import java.util.Scanner;
 
 @Component
 public class BikeApp {
+    private static final String CRUD = RentalConfig.getPropertyMenu("crud");
     private final Scanner scanner;
     private final BikeService bikeService;
 
@@ -21,8 +21,6 @@ public class BikeApp {
         this.bikeService = bikeService;
         this.scanner = new Scanner(System.in);
     }
-
-    private static final String CRUD = RentalConfig.getPropertyMenu("crud");
 
     public void crudBike() {
         while (true) {

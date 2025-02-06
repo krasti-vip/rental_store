@@ -4,12 +4,12 @@ DROP TABLE IF EXISTS bikes;
 --- Создание таблицы bikes
 CREATE TABLE IF NOT EXISTS bikes
 (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR ( 50 ) NOT NULL,
-    price DOUBLE PRECISION NOT NULL,
-    horse_power INT NOT NULL,
-    volume DOUBLE PRECISION NOT NULL
-    );
+    id          SERIAL PRIMARY KEY,
+    name        VARCHAR(50)      NOT NULL,
+    price       DOUBLE PRECISION NOT NULL,
+    horse_power INT              NOT NULL,
+    volume      DOUBLE PRECISION NOT NULL
+);
 
 --- Инициализация таблицы bikes
 INSERT INTO bikes (name, price, horse_power, volume)
@@ -25,14 +25,14 @@ DROP TABLE IF EXISTS cars;
 --- Создание таблицы cars
 CREATE TABLE IF NOT EXISTS cars
 (
-    id SERIAL PRIMARY KEY,
-    title VARCHAR(50) NOT NULL,
-    price DOUBLE PRECISION NOT NULL,
-    horse_power INT NOT NULL,
-    volume DOUBLE PRECISION NOT NULL,
-    color VARCHAR(50) NOT NULL,
-    user_id INT REFERENCES
-    );
+    id          SERIAL PRIMARY KEY,
+    title       VARCHAR(50)      NOT NULL,
+    price       DOUBLE PRECISION NOT NULL,
+    horse_power INT              NOT NULL,
+    volume      DOUBLE PRECISION NOT NULL,
+    color       VARCHAR(50)      NOT NULL,
+    user_id     INT REFERENCES
+);
 
 --- Инициализация таблицы cars
 INSERT INTO cars (title, price, horse_power, volume, color, user_id)
@@ -48,14 +48,14 @@ DROP TABLE IF EXISTS users;
 --- Создание таблицы bikes
 CREATE TABLE IF NOT EXISTS users
 (
-    id SERIAL PRIMARY KEY,
-    user_name VARCHAR(50) NOT NULL,
+    id         SERIAL PRIMARY KEY,
+    user_name  VARCHAR(50) NOT NULL,
     first_name VARCHAR(50) NOT NULL,
-    last_name VARCHAR(50) NOT NULL,
-    passport INT NOT NULL UNIQUE,
-    email VARCHAR(50),
-    bank_card BIGINT NOT NULL
-    );
+    last_name  VARCHAR(50) NOT NULL,
+    passport   INT         NOT NULL UNIQUE,
+    email      VARCHAR(50),
+    bank_card  BIGINT      NOT NULL
+);
 
 --- Инициализация таблицы bikes
 INSERT INTO users (user_name, first_name, last_name, passport, email, bank_card)

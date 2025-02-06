@@ -7,9 +7,6 @@ import java.util.Properties;
 
 public class RentalConfig {
 
-    private RentalConfig() {
-    }
-
     private final static Properties menu = new Properties();
 
     static {
@@ -19,6 +16,9 @@ public class RentalConfig {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private RentalConfig() {
     }
 
     public static String getPropertyMenu(String key) {
