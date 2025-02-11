@@ -20,4 +20,6 @@ public class BikeDto {
     private int horsePower;
 
     private double volume;
+
+    private Integer userId;
 }

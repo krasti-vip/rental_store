@@ -4,6 +4,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import ru.rental.servic.model.Bike;
+import ru.rental.servic.model.Car;
+
+import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -25,4 +29,7 @@ public class UserDto {
 
     private long bankCard;
 
+    private List<Bike> listBike;
+
+    private List<Car> listCar;
 }

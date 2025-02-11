@@ -3,6 +3,7 @@ package rental.servic;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import ru.rental.servic.dao.CarDao;
+import ru.rental.servic.dao.UserDao;
 import ru.rental.servic.dto.CarDto;
 import ru.rental.servic.service.CarService;
 
@@ -13,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class CarServiceTest extends BaseBd {
 
-    private final CarService carService = new CarService(new CarDao());
+    private final CarService carService = new CarService(new CarDao(new UserDao()));
 
     @Test
     @DisplayName("Test get")
@@ -80,4 +81,29 @@ class CarServiceTest extends BaseBd {
         assertTrue(carFilter.size() > 0);
         assertEquals("HYUNDAI", carFilter.get(0).getTitle());
     }
+
+//    @Test
+//    @DisplayName("Test updateUserId")
+//    void updateUserIdTest() {
+//        Integer carId = carService.getAll().get(2).getId();
+//        Integer newUserId = 3;
+//
+//        Optional<CarDto> updatedCar = carService.updateUserId(carId, newUserId);
+//
+//        assertNull(updatedCar.get().getUserId());
+//        System.out.println(updatedCar.get().getUserId());
+//        assertTrue(updatedCar.isPresent(), "Обновленная машина должна быть не null");
+//        assertEquals(newUserId, updatedCar.get().getUserId(), "userId машины должен обновиться");
+//
+//        CarDto actualCar = carService.get(carId).orElseThrow(() -> new IllegalStateException("Car not found"));
+//        assertEquals(newUserId, actualCar.getUserId(), "userId в базе данных должен совпадать");
+//
+//        List<CarDto> userCars = carService.getAllByUserId(newUserId);
+//        assertNotNull(userCars, "Список машин пользователя не должен быть null");
+//        assertFalse(userCars.isEmpty(), "Список машин пользователя не должен быть пустым");
+//
+//        for (CarDto car : userCars) {
+//            assertEquals(newUserId, car.getUserId(), "Все машины должны принадлежать пользователю с ID " + newUserId);
+//        }
+//    }
 }
