@@ -89,6 +89,17 @@ public class BikeDao implements DAO<Bike, Integer> {
             WHERE user_id = ?
             """;
 
+    private static final String CHECK_TABLE = """
+            SELECT EXISTS (
+                    SELECT FROM information_schema.tables 
+                    WHERE table_name = ?
+            )
+            """;
+
+    private static final String CHECK_BIKE_ID = """
+            SELECT 1 FROM bikes WHERE id = ?
+            """;
+
     /**
      * Метод проверяет по переданному названию таблицы, ее существование, вернет или True, или False
      *
@@ -97,15 +108,8 @@ public class BikeDao implements DAO<Bike, Integer> {
      */
     @Override
     public boolean checkIfTableExists(String tableName) {
-        String query = """
-                SELECT EXISTS (
-                    SELECT FROM information_schema.tables 
-                    WHERE table_name = ?
-                )
-                """;
-
         try (final var connection = ConnectionManager.getConnection();
-             final var preparedStatement = connection.prepareStatement(query)) {
+             final var preparedStatement = connection.prepareStatement(CHECK_TABLE)) {
 
             preparedStatement.setString(1, tableName.toLowerCase());
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -153,6 +157,7 @@ public class BikeDao implements DAO<Bike, Integer> {
             log.info("id is null!");
             throw new IllegalArgumentException("ID Bike не может быть null");
         }
+
         try (final var connection = ConnectionManager.getConnection();
              final var preparedStatement = connection.prepareStatement(SELECT_BIKE)) {
 
@@ -191,9 +196,7 @@ public class BikeDao implements DAO<Bike, Integer> {
     @Override
     public Bike update(Integer id, Bike obj) {
         try (final var connection = ConnectionManager.getConnection()) {
-
-            String checkQuery = "SELECT 1 FROM bikes WHERE id = ?";
-            try (final var checkStmt = connection.prepareStatement(checkQuery)) {
+            try (final var checkStmt = connection.prepareStatement(CHECK_BIKE_ID)) {
                 checkStmt.setInt(1, id);
                 try (final var rs = checkStmt.executeQuery()) {
                     if (!rs.next()) {
@@ -335,9 +338,7 @@ public class BikeDao implements DAO<Bike, Integer> {
 
     public Bike updateUserId(Integer bikeId, Integer userId) {
         try (final var connection = ConnectionManager.getConnection()) {
-
-            String checkQuery = "SELECT 1 FROM bikes WHERE id = ?";
-            try (final var checkStmt = connection.prepareStatement(checkQuery)) {
+            try (final var checkStmt = connection.prepareStatement(CHECK_BIKE_ID)) {
                 checkStmt.setInt(1, bikeId);
                 try (final var rs = checkStmt.executeQuery()) {
                     if (!rs.next()) {

@@ -1,38 +1,37 @@
 package ru.rental.service.crudApp;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import ru.rental.service.dto.BikeDto;
-import ru.rental.service.service.BikeService;
+import ru.rental.service.service.Service;
 import ru.rental.service.util.PropertiesUtil;
-import java.util.List;
+
 import java.util.Optional;
 import java.util.Scanner;
 
-@Component
-public class BikeCRUD {
-    private static final String CRUD = PropertiesUtil.getPropertyMenu("crud");
-    private final Scanner scanner;
-    private final BikeService bikeService;
+public abstract class CLI<T> {
 
-    @Autowired
-    public BikeCRUD(BikeService bikeService) {
-        this.bikeService = bikeService;
-        this.scanner = new Scanner(System.in);
+    private static final String CRUD = PropertiesUtil.getPropertyMenu("crud");
+
+    private final Scanner scanner;
+
+    private final Service<T, Integer> service;
+
+    protected CLI(Scanner scanner, Service<T, Integer> service) {
+        this.scanner = scanner;
+        this.service = service;
     }
 
-    public void crudBike() {
+    public void crud() {
         while (true) {
-            displayBikes();
+            display();
             System.out.println(CRUD);
             String scan = scanner.nextLine();
 
             switch (scan.toLowerCase()) {
                 case "1":
-                    viewBikeById();
+                    viewById();
                     break;
                 case "2":
-                    updateBike();
+                    update();
                     break;
                 case "3":
                     addNewBike();
@@ -51,19 +50,17 @@ public class BikeCRUD {
         }
     }
 
-    private void displayBikes() {
-        List<BikeDto> bikes = bikeService.getAll();
-        for (BikeDto bike : bikes) {
-            System.out.println(bike);
-        }
+    private void display() {
+        service.getAll().stream().forEach(System.out::println);
     }
 
-    private void viewBikeById() {
+    private void viewById() {
         System.out.println("Введите id: ");
         String scan = scanner.nextLine();
+
         try {
             int id = Integer.parseInt(scan);
-            var bike = bikeService.get(id);
+            var bike = service.get(id);
             bike.ifPresentOrElse(
                     System.out::println,
                     () -> System.out.println("Байк с таким ID не найден.")
@@ -73,7 +70,7 @@ public class BikeCRUD {
         }
     }
 
-    private void updateBike() {
+    private void update() {
         System.out.println("Введите id байка для обновления: ");
         String idInput = scanner.nextLine();
         try {

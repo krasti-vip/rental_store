@@ -1,7 +1,8 @@
 package ru.rental.service;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.*;
-import ru.rental.service.crudApp.BikeCRUD;
+import ru.rental.service.crudApp.BikeCLI;
 import ru.rental.service.crudApp.CarCRUD;
 import ru.rental.service.crudApp.UserCRUD;
 import ru.rental.service.dto.BikeDto;
@@ -30,7 +31,7 @@ public class RentalServiceApp {
         final var bikeService = context.getBean("bikeService", BikeService.class);
         final var carService = context.getBean("carService", CarService.class);
         final var userService = context.getBean("userService", UserService.class);
-        final var bikeApp = context.getBean(BikeCRUD.class);
+        final var bikeApp = context.getBean(BikeCLI.class);
         final var userApp = context.getBean(UserCRUD.class);
         final var carApp = context.getBean(CarCRUD.class);
 
@@ -97,6 +98,11 @@ public class RentalServiceApp {
                 System.out.println("Неверный пароль");
             }
         }
+    }
+
+    @Bean(name = "modelMapper")
+    public ModelMapper createModelMapper() {
+        return new ModelMapper();
     }
 }
 

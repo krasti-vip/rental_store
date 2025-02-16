@@ -1,5 +1,6 @@
 package ru.rental.service.service;
 
+import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,10 +21,13 @@ public class BikeService implements Service<BikeDto, Integer> {
 
     private static final String NO_BIKE_FOUND = "Bike with id {} not found";
 
+    private final ModelMapper modelMapper;
+
     private final BikeDao bikeDao;
 
     @Autowired
-    public BikeService(BikeDao bikeDao) {
+    public BikeService(BikeDao bikeDao, ModelMapper modelMapper) {
+        this.modelMapper = modelMapper;
         this.bikeDao = bikeDao;
     }
 
@@ -36,7 +40,7 @@ public class BikeService implements Service<BikeDto, Integer> {
             return Optional.empty();
         } else {
             log.info("Bike with id {} found", id);
-            return Optional.of(convertByDto(maybeBike));
+            return Optional.of(modelMapper.map(maybeBike, BikeDto.class));
         }
     }
 
@@ -59,7 +63,7 @@ public class BikeService implements Service<BikeDto, Integer> {
 
         var updated = bikeDao.update(id, updatedBike);
         log.info("Bike with id {} updated", id);
-        return Optional.of(convertByDto(updated));
+        return Optional.of(modelMapper.map(updated, BikeDto.class));
     }
 
     @Override
@@ -73,7 +77,7 @@ public class BikeService implements Service<BikeDto, Integer> {
 
         var savedBike = bikeDao.save(newBike);
         log.info("Bike with id {} saved", savedBike.getId());
-        return convertByDto(savedBike);
+        return modelMapper.map(savedBike, BikeDto.class);
     }
 
     @Override
@@ -92,7 +96,7 @@ public class BikeService implements Service<BikeDto, Integer> {
     public List<BikeDto> filterBy(Predicate<BikeDto> predicate) {
         log.info("Bike filtering by {}", predicate);
         return bikeDao.getAll().stream()
-                .map(this::convertByDto)
+                .map(e -> modelMapper.map(e, BikeDto.class))
                 .filter(predicate)
                 .toList();
     }
@@ -104,25 +108,13 @@ public class BikeService implements Service<BikeDto, Integer> {
             return new ArrayList<>();
         }
         log.info("Bikes found");
-        return bikeDao.getAll().stream().map(this::convertByDto).toList();
-    }
-
-    private BikeDto convertByDto(Bike bike) {
-        log.info("Bike with id {} converted", bike.getId());
-        return BikeDto.builder()
-                .id(bike.getId())
-                .name(bike.getName())
-                .price(bike.getPrice())
-                .volume(bike.getVolume())
-                .horsePower(bike.getHorsePower())
-                .userId(bike.getUserId())
-                .build();
+        return bikeDao.getAll().stream().map(e -> modelMapper.map(e, BikeDto.class)).toList();
     }
 
     public List<BikeDto> getAllByUserId(int userId) {
         log.info("Fetching bikes for user with id {}", userId);
         return bikeDao.getAllByUserId(userId).stream()
-                .map(this::convertByDto)
+                .map(e -> modelMapper.map(e, BikeDto.class))
                 .toList();
     }
 
@@ -132,7 +124,7 @@ public class BikeService implements Service<BikeDto, Integer> {
 
         if (updatedBike != null) {
             log.info("Bike with id {} successfully updated with userId {}", bikeId, userId);
-            return Optional.of(convertByDto(updatedBike));
+            return Optional.of(modelMapper.map(updatedBike, BikeDto.class));
         }
 
         log.warn("Bike with id {} was not updated!", bikeId);

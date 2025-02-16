@@ -2,6 +2,7 @@ package rental.servic;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.modelmapper.ModelMapper;
 import ru.rental.service.dao.BikeDao;
 import ru.rental.service.dao.UserDao;
 import ru.rental.service.dto.BikeDto;
@@ -15,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class BikeServiceTest extends BaseBd {
 
-    private final BikeService bikeService = new BikeService(new BikeDao(new UserDao()));
+    private final BikeService bikeService = new BikeService(new BikeDao(new UserDao()), new ModelMapper());
 
     @Test
     @DisplayName("Test get")
