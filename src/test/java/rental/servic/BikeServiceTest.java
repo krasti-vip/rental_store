@@ -2,9 +2,12 @@ package rental.servic;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import ru.rental.servic.dao.BikeDao;
-import ru.rental.servic.dto.BikeDto;
-import ru.rental.servic.service.BikeService;
+import ru.rental.service.dao.BikeDao;
+import ru.rental.service.dao.UserDao;
+import ru.rental.service.dto.BikeDto;
+import ru.rental.service.dto.CarDto;
+import ru.rental.service.service.BikeService;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -12,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class BikeServiceTest extends BaseBd {
 
-    private final BikeService bikeService = new BikeService(new BikeDao());
+    private final BikeService bikeService = new BikeService(new BikeDao(new UserDao()));
 
     @Test
     @DisplayName("Test get")
@@ -76,5 +79,32 @@ class BikeServiceTest extends BaseBd {
         List<BikeDto> bikeFilter = bikeService.filterBy(u -> u.getName().equals("SUZUKI"));
         assertTrue(bikeFilter.size() > 0);
         assertEquals("SUZUKI", bikeFilter.get(0).getName());
+    }
+
+    @Test
+    @DisplayName("Test updateUserId")
+    void updateUserIdTest() {
+        Integer bikeId = bikeService.getAll().get(2).getId();
+        Integer newUserId = 3;
+
+        Optional<BikeDto> updatedBike = bikeService.updateUserId(bikeId, newUserId);
+
+        assertNotNull(updatedBike.get().getUserId());
+        System.out.println(updatedBike.get().getUserId());
+
+        assertTrue(updatedBike.isPresent(), "Обновленный bike должен быть не null");
+        assertEquals(newUserId, updatedBike.get().getUserId(), "userId bike должен обновиться");
+
+        BikeDto actualBike = bikeService.get(bikeId).orElseThrow(() -> new IllegalStateException("Bike not found"));
+        assertEquals(newUserId, actualBike.getUserId(), "userId в базе данных должен совпадать");
+
+        List<BikeDto> userBike = bikeService.getAllByUserId(newUserId);
+
+        assertNotNull(userBike, "Список bikes пользователя не должен быть null");
+        assertFalse(userBike.isEmpty(), "Список bikes пользователя не должен быть пустым");
+
+        for (BikeDto bike : userBike) {
+            assertEquals(newUserId, bike.getUserId(), "Все bikes должны принадлежать пользователю с ID " + newUserId);
+        }
     }
 }

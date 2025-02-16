@@ -1,10 +1,12 @@
-package ru.rental.servic.service;
+package ru.rental.service.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ru.rental.servic.dao.UserDao;
-import ru.rental.servic.dto.UserDto;
-import ru.rental.servic.model.User;
+import ru.rental.service.dao.UserDao;
+import ru.rental.service.dto.UserDto;
+import ru.rental.service.model.User;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,6 +14,10 @@ import java.util.function.Predicate;
 
 @Component
 public class UserService implements Service<UserDto, Integer> {
+
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
+
+    private static final String NO_USER_FOUND = "User not found";
 
     private final UserDao userDao;
 
@@ -25,8 +31,10 @@ public class UserService implements Service<UserDto, Integer> {
         final var maybeUser = userDao.get(id);
 
         if (maybeUser == null) {
+            log.info(NO_USER_FOUND);
             return Optional.empty();
         } else {
+            log.info("User found");
             return Optional.of(convertByDto(maybeUser));
         }
     }
@@ -36,6 +44,7 @@ public class UserService implements Service<UserDto, Integer> {
         var maybeUser = userDao.get(id);
 
         if (maybeUser == null) {
+            log.info(NO_USER_FOUND);
             return Optional.empty();
         }
 
@@ -46,9 +55,12 @@ public class UserService implements Service<UserDto, Integer> {
                 .passport(obj.getPassport())
                 .email(obj.getEmail())
                 .bankCard(obj.getBankCard())
+                .listBike(obj.getListBike())
+                .listCar(obj.getListCar())
                 .build();
 
         var updated = userDao.update(id, updatedUser);
+        log.info("User updated");
         return Optional.of(convertByDto(updated));
     }
 
@@ -64,7 +76,7 @@ public class UserService implements Service<UserDto, Integer> {
                 .build();
 
         var savedUser = userDao.save(newUser);
-
+        log.info("User saved");
         return convertByDto(savedUser);
     }
 
@@ -73,10 +85,10 @@ public class UserService implements Service<UserDto, Integer> {
         var maybeUser = userDao.get(id);
 
         if (maybeUser == null) {
-
+            log.info(NO_USER_FOUND);
             return false;
         }
-
+        log.info("User deleted");
         return userDao.delete(id);
     }
 
@@ -84,7 +96,7 @@ public class UserService implements Service<UserDto, Integer> {
     public List<UserDto> filterBy(Predicate<UserDto> predicate) {
 
         List<User> users = userDao.getAll();
-
+        log.info("Users found");
         return users.stream()
                 .map(this::convertByDto)
                 .filter(predicate)
@@ -95,13 +107,14 @@ public class UserService implements Service<UserDto, Integer> {
     public List<UserDto> getAll() {
 
         List<User> users = userDao.getAll();
-
+        log.info("Users found");
         return users.stream()
                 .map(this::convertByDto)
                 .toList();
     }
 
     private UserDto convertByDto(User user) {
+        log.info("Converting UserDto");
         return UserDto.builder()
                 .id(user.getId())
                 .userName(user.getUserName())
@@ -112,4 +125,6 @@ public class UserService implements Service<UserDto, Integer> {
                 .bankCard(user.getBankCard())
                 .build();
     }
+
+
 }

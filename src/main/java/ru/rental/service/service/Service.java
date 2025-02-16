@@ -1,4 +1,4 @@
-package ru.rental.servic.service;
+package ru.rental.service.service;
 
 import java.util.List;
 import java.util.Optional;

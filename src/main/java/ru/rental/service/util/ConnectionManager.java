@@ -1,4 +1,4 @@
-package ru.rental.servic.util;
+package ru.rental.service.util;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

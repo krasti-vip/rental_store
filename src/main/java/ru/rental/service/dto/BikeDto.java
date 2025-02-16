@@ -1,4 +1,4 @@
-package ru.rental.servic.dto;
+package ru.rental.service.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,4 +20,6 @@ public class BikeDto {
     private int horsePower;
 
     private double volume;
+
+    private Integer userId;
 }
