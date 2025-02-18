@@ -7,6 +7,7 @@ import ru.rental.service.model.Bike;
 import ru.rental.service.model.Car;
 import ru.rental.service.model.User;
 import ru.rental.service.util.ConnectionManager;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -24,7 +25,9 @@ public class UserDao implements DAO<User, Integer> {
     private static final String USER_FOUND = "Users loaded: {}";
 
     private static final String SELECT_USER = """
-            SELECT id, user_name, first_name, last_name, passport, email, bank_card FROM users WHERE id = ?
+            SELECT id, user_name, first_name, last_name, passport, email, bank_card 
+            FROM users 
+            WHERE id = ?
             """;
 
     private static final String CREATE_TABLE = """
@@ -62,6 +65,22 @@ public class UserDao implements DAO<User, Integer> {
     private static final String SELECT_ALL_USERS =
             "SELECT id, user_name, first_name, last_name, passport, email, bank_card FROM users";
 
+    private static final String CHECK_TABLE = """
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_name = ?
+            )
+            """;
+
+    private static final String CHECK_USER_ID =
+            "SELECT id FROM users WHERE id = ?";
+
+    private static final String QUERY_BIKE =
+            "SELECT id, name, price, horse_power, volume, user_id FROM bikes WHERE user_id = ?";
+
+    private static final String QUERY_CAR =
+            "SELECT id, title, price, horse_power, volume, color, user_id FROM cars WHERE user_id = ?";
+
     /**
      * Метод проверяет по переданному названию таблицы, ее существование, вернет или True, или False
      *
@@ -70,15 +89,8 @@ public class UserDao implements DAO<User, Integer> {
      */
     @Override
     public boolean checkIfTableExists(String tableName) {
-        String query = """
-                SELECT EXISTS (
-                    SELECT FROM information_schema.tables 
-                    WHERE table_name = ?
-                )
-                """;
-
         try (final var connection = ConnectionManager.getConnection();
-             final var preparedStatement = connection.prepareStatement(query)) {
+             final var preparedStatement = connection.prepareStatement(CHECK_TABLE)) {
 
             preparedStatement.setString(1, tableName.toLowerCase());
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -168,8 +180,7 @@ public class UserDao implements DAO<User, Integer> {
     public User update(Integer id, User obj) {
         try (final var connection = ConnectionManager.getConnection()) {
 
-            String checkQuery = "SELECT 1 FROM users WHERE id = ?";
-            try (final var checkStmt = connection.prepareStatement(checkQuery)) {
+            try (final var checkStmt = connection.prepareStatement(CHECK_USER_ID)) {
                 checkStmt.setInt(1, id);
                 try (final var rs = checkStmt.executeQuery()) {
                     if (!rs.next()) {
@@ -327,10 +338,9 @@ public class UserDao implements DAO<User, Integer> {
 
     private List<Bike> getUserBikes(int userId) {
         List<Bike> bikes = new ArrayList<>();
-        String query = "SELECT id, name, price, horse_power, volume, user_id FROM bikes WHERE user_id = ?";
 
         try (var connection = ConnectionManager.getConnection();
-             var preparedStatement = connection.prepareStatement(query)) {
+             var preparedStatement = connection.prepareStatement(QUERY_BIKE)) {
 
             preparedStatement.setInt(1, userId);
             var resultSet = preparedStatement.executeQuery();
@@ -354,10 +364,9 @@ public class UserDao implements DAO<User, Integer> {
 
     private List<Car> getUserCars(int userId) {
         List<Car> cars = new ArrayList<>();
-        String query = "SELECT id, title, price, horse_power, volume, color, user_id FROM cars WHERE user_id = ?";
 
         try (var connection = ConnectionManager.getConnection();
-             var preparedStatement = connection.prepareStatement(query)) {
+             var preparedStatement = connection.prepareStatement(QUERY_CAR)) {
 
             preparedStatement.setInt(1, userId);
             var resultSet = preparedStatement.executeQuery();

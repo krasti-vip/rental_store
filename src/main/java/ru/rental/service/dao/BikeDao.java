@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.rental.service.model.Bike;
 import ru.rental.service.util.ConnectionManager;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -33,7 +32,6 @@ public class BikeDao implements DAO<Bike, Integer> {
     private static final Logger log = LoggerFactory.getLogger(BikeDao.class);
 
     private final UserDao userDao;
-
 
     @Autowired
     public BikeDao(UserDao userDao) {
@@ -391,7 +389,7 @@ public class BikeDao implements DAO<Bike, Integer> {
                         .price(resultSet.getDouble(PRICE))
                         .horsePower(resultSet.getInt(HORSE_POWER))
                         .volume(resultSet.getDouble(VOLUME))
-                        .userId(resultSet.getInt("user_id"))
+                        .userId(resultSet.getInt(USER_ID))
                         .build());
             }
         } catch (SQLException e) {
