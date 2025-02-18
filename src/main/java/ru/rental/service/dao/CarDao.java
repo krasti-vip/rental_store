@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.rental.service.model.Car;
 import ru.rental.service.util.ConnectionManager;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -92,6 +93,17 @@ public class CarDao implements DAO<Car, Integer> {
             WHERE user_id = ?
             """;
 
+    private static final String CHECK_CARE_ID = """
+            SELECT id FROM cars WHERE id = ?
+            """;
+
+    private static final String CHECK_TABLE = """
+            SELECT EXISTS (
+                    SELECT FROM information_schema.tables 
+                    WHERE table_name = ?
+            )
+            """;
+
     /**
      * Метод проверяет по переданному названию таблицы, ее существование, вернет или True, или False
      *
@@ -100,15 +112,8 @@ public class CarDao implements DAO<Car, Integer> {
      */
     @Override
     public boolean checkIfTableExists(String tableName) {
-        String query = """
-                SELECT EXISTS (
-                    SELECT FROM information_schema.tables 
-                    WHERE table_name = ?
-                )
-                """;
-
         try (final var connection = ConnectionManager.getConnection();
-             final var preparedStatement = connection.prepareStatement(query)) {
+             final var preparedStatement = connection.prepareStatement(CHECK_TABLE)) {
 
             preparedStatement.setString(1, tableName.toLowerCase());
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -195,8 +200,7 @@ public class CarDao implements DAO<Car, Integer> {
     public Car update(Integer id, Car obj) {
         try (final var connection = ConnectionManager.getConnection()) {
 
-            String checkQuery = "SELECT 1 FROM cars WHERE id = ?";
-            try (final var checkStmt = connection.prepareStatement(checkQuery)) {
+            try (final var checkStmt = connection.prepareStatement(CHECK_CARE_ID)) {
                 checkStmt.setInt(1, id);
                 try (final var rs = checkStmt.executeQuery()) {
                     if (!rs.next()) {
@@ -343,8 +347,7 @@ public class CarDao implements DAO<Car, Integer> {
     public Car updateUserId(Integer carId, Integer userId) {
         try (final var connection = ConnectionManager.getConnection()) {
 
-            String checkQuery = "SELECT id FROM cars WHERE id = ?";
-            try (final var checkStmt = connection.prepareStatement(checkQuery)) {
+            try (final var checkStmt = connection.prepareStatement(CHECK_CARE_ID)) {
                 checkStmt.setInt(1, carId);
                 try (final var rs = checkStmt.executeQuery()) {
                     if (!rs.next()) {

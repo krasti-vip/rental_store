@@ -1,5 +1,6 @@
 package ru.rental.service.service;
 
+import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +20,13 @@ public class CarService implements Service<CarDto, Integer> {
 
     private static final String NO_CAR_FOUND = "Care with id {} not found";
 
+    private final ModelMapper modelMapper;
+
     private final CarDao carDao;
 
     @Autowired
-    public CarService(CarDao carDao) {
+    public CarService(CarDao carDao, ModelMapper modelMapper) {
+        this.modelMapper = modelMapper;
         this.carDao = carDao;
     }
 
@@ -35,7 +39,7 @@ public class CarService implements Service<CarDto, Integer> {
             return Optional.empty();
         } else {
             log.info("Car with id {} found", id);
-            return Optional.of(convertByDto(maybeCar));
+            return Optional.of(modelMapper.map(maybeCar, CarDto.class));
         }
     }
 
@@ -60,7 +64,7 @@ public class CarService implements Service<CarDto, Integer> {
 
         var updated = carDao.update(id, updatedCar);
         log.info("Car with id {} updated", id);
-        return Optional.of(convertByDto(updated));
+        return Optional.of(modelMapper.map(updated, CarDto.class));
     }
 
     @Override
@@ -76,7 +80,7 @@ public class CarService implements Service<CarDto, Integer> {
 
         var savedCar = carDao.save(newCar);
         log.info("Car with id {} saved", savedCar.getId());
-        return convertByDto(savedCar);
+        return modelMapper.map(savedCar, CarDto.class);
     }
 
     @Override
@@ -95,7 +99,7 @@ public class CarService implements Service<CarDto, Integer> {
     public List<CarDto> filterBy(Predicate<CarDto> predicate) {
         log.info("filterBy");
         return carDao.getAll().stream()
-                .map(this::convertByDto)
+                .map(e -> modelMapper.map(e, CarDto.class))
                 .filter(predicate)
                 .toList();
     }
@@ -103,26 +107,13 @@ public class CarService implements Service<CarDto, Integer> {
     @Override
     public List<CarDto> getAll() {
         log.info("getAll");
-        return carDao.getAll().stream().map(this::convertByDto).toList();
-    }
-
-    private CarDto convertByDto(Car car) {
-        log.info("convertByDto");
-        return CarDto.builder()
-                .id(car.getId())
-                .title(car.getTitle())
-                .price(car.getPrice())
-                .horsePower(car.getHorsePower())
-                .volume(car.getVolume())
-                .color(car.getColor())
-                .userId(car.getUserId())
-                .build();
+        return carDao.getAll().stream().map(e -> modelMapper.map(e, CarDto.class)).toList();
     }
 
     public List<CarDto> getAllByUserId(int userId) {
         log.info("Fetching cars for user with id {}", userId);
         return carDao.getAllByUserId(userId).stream()
-                .map(this::convertByDto)
+                .map(e -> modelMapper.map(e, CarDto.class))
                 .toList();
     }
 
@@ -132,7 +123,7 @@ public class CarService implements Service<CarDto, Integer> {
 
         if (updatedCar != null) {
             log.info("Car with id {} successfully updated with userId {}", carId, userId);
-            return Optional.of(convertByDto(updatedCar));
+            return Optional.of(modelMapper.map(updatedCar, CarDto.class));
         }
 
         log.warn("Car with id {} was not updated!", carId);

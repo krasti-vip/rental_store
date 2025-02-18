@@ -32,4 +32,19 @@ public class UserDto {
     private List<Bike> listBike;
 
     private List<Car> listCar;
+
+    @Override
+    public String toString() {
+        return String.format("UserDto(id=%d,\n" +
+                        "        userName=%s,\n" +
+                        "        firstName=%s,\n" +
+                        "        lastName=%s,\n" +
+                        "        passport=%s,\n" +
+                        "        email=%s,\n" +
+                        "        bankCard=%s,\n" +
+                        "        listBike=%s,\n" +
+                        "        listCar=%s)",
+                id, userName, firstName, lastName, passport, email, bankCard,
+                listBike != null ? listBike : "null", listCar != null ? listCar : "null");
+    }
 }

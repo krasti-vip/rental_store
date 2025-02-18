@@ -1,5 +1,6 @@
 package ru.rental.service.service;
 
+import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +20,13 @@ public class UserService implements Service<UserDto, Integer> {
 
     private static final String NO_USER_FOUND = "User not found";
 
+    private final ModelMapper modelMapper;
+
     private final UserDao userDao;
 
     @Autowired
-    public UserService(UserDao userDao) {
+    public UserService(UserDao userDao, ModelMapper modelMapper) {
+        this.modelMapper = modelMapper;
         this.userDao = userDao;
     }
 
@@ -35,7 +39,7 @@ public class UserService implements Service<UserDto, Integer> {
             return Optional.empty();
         } else {
             log.info("User found");
-            return Optional.of(convertByDto(maybeUser));
+            return Optional.of(modelMapper.map(maybeUser, UserDto.class));
         }
     }
 
@@ -61,7 +65,7 @@ public class UserService implements Service<UserDto, Integer> {
 
         var updated = userDao.update(id, updatedUser);
         log.info("User updated");
-        return Optional.of(convertByDto(updated));
+        return Optional.of(modelMapper.map(updated, UserDto.class));
     }
 
     @Override
@@ -77,7 +81,7 @@ public class UserService implements Service<UserDto, Integer> {
 
         var savedUser = userDao.save(newUser);
         log.info("User saved");
-        return convertByDto(savedUser);
+        return modelMapper.map(savedUser, UserDto.class);
     }
 
     @Override
@@ -98,7 +102,7 @@ public class UserService implements Service<UserDto, Integer> {
         List<User> users = userDao.getAll();
         log.info("Users found");
         return users.stream()
-                .map(this::convertByDto)
+                .map(e -> modelMapper.map(e, UserDto.class))
                 .filter(predicate)
                 .toList();
     }
@@ -109,22 +113,7 @@ public class UserService implements Service<UserDto, Integer> {
         List<User> users = userDao.getAll();
         log.info("Users found");
         return users.stream()
-                .map(this::convertByDto)
+                .map(e -> modelMapper.map(e, UserDto.class))
                 .toList();
     }
-
-    private UserDto convertByDto(User user) {
-        log.info("Converting UserDto");
-        return UserDto.builder()
-                .id(user.getId())
-                .userName(user.getUserName())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .passport(user.getPassport())
-                .email(user.getEmail())
-                .bankCard(user.getBankCard())
-                .build();
-    }
-
-
 }
